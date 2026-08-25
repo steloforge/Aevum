@@ -11,6 +11,7 @@ from aevum.character.decision import (
     calculate_goal_effect,
     calculate_goal_relevance,
     calculate_risk_effect,
+    generate_self_directed_actions,
 )
 
 
