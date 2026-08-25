@@ -812,11 +812,17 @@ def calculate_goal_effect(
     if action_type == "train":
 
         ambition = character.get(
+            "traits",
+            {},
+        ).get(
             "ambition",
             0,
         )
 
         discipline = character.get(
+            "skills",
+            {},
+        ).get(
             "discipline",
             0,
         )
