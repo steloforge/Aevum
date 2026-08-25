@@ -1,8 +1,10 @@
 from aevum.character.decision import (
     calculate_need_pressure,
     calculate_need_urgency,
+    calculate_repetition_effect,
     calculate_sleep_pressure,
     calculate_time_of_day_effect,
+    record_recent_action,
 )
 
 
