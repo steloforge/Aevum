@@ -1,6 +1,7 @@
 from aevum.character.decision import (
     calculate_need_pressure,
     calculate_need_urgency,
+    calculate_sleep_pressure,
 )
 
 
@@ -141,3 +142,99 @@ def test_action_can_satisfy_multiple_needs():
     assert len(
         result["reasons"]
     ) == 2
+
+def test_sleep_pressure_is_zero_below_fatigue_threshold():
+    character = {
+        "needs": {
+            "fatigue": 10,
+        },
+    }
+
+    action = {
+        "action_type":
+            "sleep",
+    }
+
+    result = calculate_sleep_pressure(
+        character,
+        action,
+    )
+
+    assert result["score"] == 0
+
+
+def test_sleep_pressure_uses_only_fatigue_above_twenty():
+    character = {
+        "needs": {
+            "fatigue": 34.5,
+        },
+    }
+
+    action = {
+        "action_type":
+            "sleep",
+    }
+
+    result = calculate_sleep_pressure(
+        character,
+        action,
+    )
+
+    assert (
+        result["score"]
+        == 12.69
+    )
+
+
+def test_sleep_pressure_reproduces_high_fatigue_behavior():
+    character = {
+        "needs": {
+            "fatigue": 37.33,
+        },
+    }
+
+    action = {
+        "action_type":
+            "sleep",
+    }
+
+    result = calculate_sleep_pressure(
+        character,
+        action,
+    )
+
+    # Effective fatigue:
+    # 37.33 - 20 = 17.33
+    #
+    # Urgency at 37.33 fatigue:
+    # 1.25
+    #
+    # 17.33 * 0.70 * 1.25
+    # = 15.16375
+    assert (
+        result["score"]
+        == 15.16
+    )
+
+
+def test_non_sleep_action_gets_no_sleep_pressure():
+    character = {
+        "needs": {
+            "fatigue": 90,
+        },
+    }
+
+    action = {
+        "action_type":
+            "rest",
+    }
+
+    result = calculate_sleep_pressure(
+        character,
+        action,
+    )
+
+    assert result == {
+        "score": 0,
+        "reasons": [],
+    }
