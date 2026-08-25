@@ -1287,8 +1287,13 @@ def test_training_goal_effect_uses_ambition_and_discipline():
             "training_drive": 100,
         },
 
-        "ambition": 80,
-        "discipline": 60,
+        "traits": {
+            "ambition": 80,
+        },
+
+        "skills": {
+            "discipline": 60,
+        },
     }
 
     action = {
