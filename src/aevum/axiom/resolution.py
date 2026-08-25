@@ -11,6 +11,9 @@ from aevum.axiom.actions import (
     validate_action,
 )
 
+from aevum.world import (
+    create_world_event,
+)
 
 def resolve_action_outcome(
     world,
@@ -62,6 +65,299 @@ def resolve_action_outcome(
 
     print(
         f"Location: {location}"
+    )
+
+def create_outcome_event(
+    world,
+    character,
+    original_event,
+    chosen_action,
+    outcome,
+):
+    """
+    Convert an authoritative action resolution into a new
+    canonical Axiom world event.
+
+    The outcome event describes what actually happened,
+    not what the character believes happened.
+    """
+
+    action_name = chosen_action[
+        "action"
+    ]
+
+    action_type = chosen_action.get(
+        "action_type"
+    )
+
+    target = chosen_action.get(
+        "target"
+    )
+
+    status = outcome[
+        "status"
+    ]
+
+    details = {
+        "source_event_id":
+            original_event[
+                "event_id"
+            ],
+
+        "performed_action":
+            action_name,
+
+        "action_type":
+            action_type,
+
+        "target":
+            target,
+
+        "action_success":
+            status == "success",
+
+        "partial_success":
+            status
+            == "partial_success",
+
+        "action_failed":
+            status == "failure",
+
+        "action_blocked":
+            status == "blocked",
+    }
+
+    # ========================================================
+    # HELP PERSON
+    # ========================================================
+
+    if action_type == "help_person":
+
+        if status == "success":
+
+            description = (
+                f"{character['name']} successfully "
+                f"helped {target} and got them "
+                "to safety."
+            )
+
+            details.update(
+                {
+                    "helped_person":
+                        True,
+
+                    "protected_other":
+                        True,
+
+                    "resolved_peacefully":
+                        True,
+                }
+            )
+
+        elif (
+            status
+            == "partial_success"
+        ):
+
+            description = (
+                f"{character['name']} helped "
+                f"{target}, but additional "
+                "assistance was still needed."
+            )
+
+            details.update(
+                {
+                    "helped_person":
+                        True,
+
+                    "protected_other":
+                        False,
+                }
+            )
+
+        elif status == "failure":
+
+            description = (
+                f"{character['name']} tried "
+                f"to help {target}, but was "
+                "unable to provide enough "
+                "assistance."
+            )
+
+            details.update(
+                {
+                    "helped_person":
+                        False,
+
+                    "attempted_to_help":
+                        True,
+                }
+            )
+
+        elif status == "blocked":
+
+            description = (
+                f"{character['name']} attempted "
+                f"to help {target}, but the "
+                "action was prevented."
+            )
+
+            details.update(
+                {
+                    "helped_person":
+                        False,
+
+                    "blocked_reason":
+                        outcome["reason"],
+                }
+            )
+
+        else:
+
+            description = (
+                f"{character['name']} attempted "
+                f"to help {target}, but the "
+                "result could not be resolved."
+            )
+
+    # ========================================================
+    # REQUEST HELP
+    # ========================================================
+
+    elif action_type == "request_help":
+
+        if status == "success":
+
+            description = (
+                f"{character['name']} called "
+                "for assistance, and nearby "
+                f"people joined in to help "
+                f"{target}."
+            )
+
+            details.update(
+                {
+                    "community_help_given":
+                        True,
+
+                    "helped_person":
+                        True,
+
+                    "resolved_peacefully":
+                        True,
+                }
+            )
+
+        elif (
+            status
+            == "partial_success"
+        ):
+
+            description = (
+                f"{character['name']} called "
+                "for assistance. Some people "
+                f"helped {target}, while "
+                "others hesitated."
+            )
+
+            details.update(
+                {
+                    "community_help_given":
+                        True,
+
+                    "helped_person":
+                        True,
+                }
+            )
+
+        else:
+
+            description = (
+                f"{character['name']} called "
+                f"for help for {target}, "
+                "but nobody responded."
+            )
+
+            details.update(
+                {
+                    "community_help_refused":
+                        True,
+
+                    "helped_person":
+                        False,
+                }
+            )
+
+    # ========================================================
+    # CONFRONT PERSON
+    # ========================================================
+
+    elif (
+        action_type
+        == "confront_person"
+    ):
+
+        description = outcome[
+            "reason"
+        ]
+
+        details.update(
+            {
+                "public_conflict":
+                    True,
+
+                "resolved_peacefully":
+                    status == "success",
+            }
+        )
+
+    # ========================================================
+    # IGNORE EVENT
+    # ========================================================
+
+    elif action_type == "ignore_event":
+
+        description = (
+            f"{character['name']} chose "
+            "not to intervene and "
+            "continued on."
+        )
+
+        details.update(
+            {
+                "ignored_event":
+                    True,
+            }
+        )
+
+    # ========================================================
+    # UNKNOWN ACTION
+    # ========================================================
+
+    else:
+
+        description = outcome[
+            "reason"
+        ]
+
+    participants = [
+        character["name"]
+    ]
+
+    if target:
+        participants.append(
+            target
+        )
+
+    return create_world_event(
+        world=world,
+        event_type="action_outcome",
+        description=description,
+        location=original_event[
+            "location"
+        ],
+        participants=participants,
+        details=details,
     )
 
     # ========================================================
