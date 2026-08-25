@@ -10,6 +10,7 @@ from aevum.character.decision import (
     calculate_value_effect,
     calculate_goal_effect,
     calculate_goal_relevance,
+    calculate_risk_effect,
 )
 
 
@@ -1494,4 +1495,90 @@ def test_low_training_drive_reduces_goal_effect():
     assert (
         "Current goal relevance: x0.25"
         in result["reasons"]
+    )
+
+def test_safe_action_has_no_risk_penalty():
+    character = {
+        "traits": {
+            "rule_obedience": 80,
+        },
+    }
+
+    action = {
+        "action_type": "eat",
+        "tags": [],
+    }
+
+    result = calculate_risk_effect(
+        character,
+        action,
+    )
+
+    assert result == {
+        "risk_penalty": 0,
+        "total_effect": 0,
+    }
+
+
+def test_risky_action_uses_rule_obedience():
+    character = {
+        "traits": {
+            "rule_obedience": 80,
+        },
+    }
+
+    action = {
+        "action_type": "train",
+        "tags": [
+            "risk",
+        ],
+    }
+
+    result = calculate_risk_effect(
+        character,
+        action,
+    )
+
+    # 80 * .03 = 2.4
+
+    assert (
+        result["risk_penalty"]
+        == 2.4
+    )
+
+    assert (
+        result["total_effect"]
+        == -2.4
+    )
+
+
+def test_low_rule_obedience_reduces_risk_hesitation():
+    character = {
+        "traits": {
+            "rule_obedience": 20,
+        },
+    }
+
+    action = {
+        "action_type": "train",
+        "tags": [
+            "risk",
+        ],
+    }
+
+    result = calculate_risk_effect(
+        character,
+        action,
+    )
+
+    # 20 * .03 = .6
+
+    assert (
+        result["risk_penalty"]
+        == 0.6
+    )
+
+    assert (
+        result["total_effect"]
+        == -0.6
     )
