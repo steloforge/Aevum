@@ -1401,6 +1401,100 @@ def score_self_directed_action(
             "Rule-risk hesitation: "
             f"-{risk_effect['risk_penalty']}"
         )
+
+
+# ============================================================
+# CHOOSE SELF-DIRECTED ACTION
+# ============================================================
+
+
+def choose_self_directed_action(
+    character,
+    world,
+):
+    """
+    Choose the highest-scoring currently available
+    self-directed action.
+
+    Returns both the chosen action and diagnostic
+    information about unavailable candidates.
+    """
+
+    actions = (
+        generate_self_directed_actions(
+            character,
+        )
+    )
+
+    scored = []
+    unavailable = []
+
+    for action in actions:
+
+        availability = (
+            is_self_directed_action_available(
+                character,
+                world,
+                action,
+            )
+        )
+
+        if not availability[
+            "available"
+        ]:
+            unavailable.append({
+                "action":
+                    action["name"],
+
+                "action_type":
+                    action[
+                        "action_type"
+                    ],
+
+                "reason":
+                    availability[
+                        "reason"
+                    ],
+            })
+
+            continue
+
+        result = (
+            score_self_directed_action(
+                character,
+                world,
+                action,
+            )
+        )
+
+        scored.append(
+            result
+        )
+
+    if not scored:
+        return {
+            "chosen_action": None,
+            "scored_actions": [],
+            "unavailable_actions":
+                unavailable,
+        }
+
+    scored.sort(
+        key=lambda result:
+            result["score"],
+        reverse=True,
+    )
+
+    return {
+        "chosen_action":
+            scored[0],
+
+        "scored_actions":
+            scored,
+
+        "unavailable_actions":
+            unavailable,
+    }
     
     return {
         "action":
