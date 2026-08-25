@@ -720,169 +720,263 @@ def test_record_recent_action_removes_old_history():
         == "eat"
     )
 
-def score_self_directed_action(
-    character,
-    world,
-    action,
-):
-    """
-    Score a self-directed action from the character's
-    current subjective motivations.
+def test_partial_action_score_combines_need_and_preference():
+    character = {
+        "needs": {
+            "hunger": 22.0,
+        },
 
-    This is currently a partial scorer containing:
+        "activity_preferences": {
+            "eat": 50,
+        },
 
-    - need pressure
-    - special sleep pressure
-    - activity preference
-    - recent repetition
-    - time-of-day context
+        "recent_actions": [],
+    }
 
-    Values, goals, traits, and risk will be layered in
-    separately.
-    """
+    world = {
+        "day": 34,
+        "hour": 10,
+    }
 
-    score = 0
-    reasons = []
+    action = {
+        "name":
+            "Eat a meal",
 
-    # ========================================================
-    # 1. NEED PRESSURE
-    # ========================================================
+        "action_type":
+            "eat",
 
-    need_effect = calculate_need_pressure(
-        character,
-        action,
-    )
+        "satisfies": {
+            "hunger": 45,
+        },
+    }
 
-    score += need_effect[
-        "score"
-    ]
-
-    reasons.extend(
-        need_effect[
-            "reasons"
-        ]
-    )
-
-    # ========================================================
-    # 2. SLEEP FATIGUE PRESSURE
-    # ========================================================
-
-    sleep_effect = (
-        calculate_sleep_pressure(
+    result = (
+        score_self_directed_action(
             character,
+            world,
             action,
         )
     )
 
-    score += sleep_effect[
-        "score"
-    ]
-
-    reasons.extend(
-        sleep_effect[
-            "reasons"
-        ]
+    assert (
+        result["score"]
+        == 9.9
     )
 
-    # ========================================================
-    # 3. PERSONAL PREFERENCE / REPETITION
-    # ========================================================
-
-    preference_effect = (
-        calculate_repetition_effect(
-            character,
-            world,
-            action[
-                "action_type"
-            ],
-        )
+    assert (
+        "hunger pressure: "
+        "+9.9 (urgency x1.0)"
+        in result["reasons"]
     )
 
-    score += preference_effect[
-        "net_effect"
-    ]
-
-    preference_bonus = (
-        preference_effect[
-            "preference_bonus"
-        ]
+    assert (
+        "Activity preference: +0.0"
+        in result["reasons"]
     )
 
-    if preference_bonus >= 0:
-        reasons.append(
-            "Activity preference: "
-            f"+{preference_bonus}"
-        )
 
-    else:
-        reasons.append(
-            "Activity preference: "
-            f"{preference_bonus}"
-        )
+def test_partial_action_score_includes_repetition_penalty():
+    character = {
+        "needs": {
+            "hunger": 22.0,
+        },
 
-    if (
-        preference_effect[
-            "repetition_penalty"
-        ]
-        > 0
-    ):
-        reasons.append(
-            "Recent repetition: "
-            f"-{preference_effect['repetition_penalty']}"
-        )
+        "activity_preferences": {
+            "eat": 50,
+        },
 
-    # ========================================================
-    # 4. TIME OF DAY
-    # ========================================================
+        "recent_actions": [
+            {
+                "action_type":
+                    "eat",
 
-    time_effect = (
-        calculate_time_of_day_effect(
-            world,
-            action[
-                "action_type"
-            ],
-        )
-    )
+                "day":
+                    34,
 
-    score += time_effect[
-        "effect"
-    ]
+                "hour":
+                    8,
 
-    if (
-        time_effect["effect"]
-        != 0
-    ):
-        sign = (
-            "+"
-            if (
-                time_effect["effect"]
-                > 0
-            )
-            else ""
-        )
+                "duration_hours":
+                    1,
+            },
+        ],
+    }
 
-        reasons.append(
-            f"Time of day "
-            f"({time_effect['period']}): "
-            f"{sign}{time_effect['effect']} "
-            f"- {time_effect['reason']}"
-        )
+    world = {
+        "day": 34,
+        "hour": 10,
+    }
 
-    return {
-        "action":
-            action["name"],
+    action = {
+        "name":
+            "Eat a meal",
 
         "action_type":
-            action[
-                "action_type"
-            ],
+            "eat",
 
-        "score":
-            round(
-                score,
-                2,
-            ),
-
-        "reasons":
-            reasons,
+        "satisfies": {
+            "hunger": 45,
+        },
     }
+
+    result = (
+        score_self_directed_action(
+            character,
+            world,
+            action,
+        )
+    )
+
+    # Preference 50 produces:
+    #
+    # base repetition = 1 * 2 = 2
+    # enjoyment resistance = .375
+    # penalty = 2 * .625 = 1.25
+    #
+    # 9.9 - 1.25 = 8.65
+
+    assert (
+        result["score"]
+        == 8.65
+    )
+
+    assert (
+        "Recent repetition: -1.25"
+        in result["reasons"]
+    )
+
+
+def test_partial_sleep_score_combines_sleep_and_time_pressure():
+    character = {
+        "needs": {
+            "fatigue": 34.5,
+        },
+
+        "activity_preferences": {
+            "sleep": 50,
+        },
+
+        "recent_actions": [],
+    }
+
+    world = {
+        "day": 4,
+        "hour": 10,
+    }
+
+    action = {
+        "name":
+            "Go to sleep",
+
+        "action_type":
+            "sleep",
+
+        "satisfies": {},
+    }
+
+    result = (
+        score_self_directed_action(
+            character,
+            world,
+            action,
+        )
+    )
+
+    # Sleep pressure = +12.69
+    # Morning context = -12
+    #
+    # Net = 0.69
+
+    assert (
+        result["score"]
+        == 0.69
+    )
+
+    assert (
+        (
+            "Sleep fatigue pressure: "
+            "+12.69 (urgency x1.25)"
+        )
+        in result["reasons"]
+    )
+
+    assert (
+        (
+            "Time of day (morning): "
+            "-12 - The character "
+            "would normally be awake"
+        )
+        in result["reasons"]
+    )
+
+
+def test_recent_full_sleep_can_outweigh_morning_sleep_desire():
+    character = {
+        "needs": {
+            "fatigue": 0,
+        },
+
+        "activity_preferences": {
+            "sleep": 50,
+        },
+
+        "recent_actions": [
+            {
+                "action_type":
+                    "sleep",
+
+                "day":
+                    4,
+
+                "hour":
+                    8,
+
+                "duration_hours":
+                    8,
+            },
+        ],
+    }
+
+    world = {
+        "day": 4,
+        "hour": 10,
+    }
+
+    action = {
+        "name":
+            "Go to sleep",
+
+        "action_type":
+            "sleep",
+
+        "satisfies": {},
+    }
+
+    result = (
+        score_self_directed_action(
+            character,
+            world,
+            action,
+        )
+    )
+
+    # Repetition:
+    #
+    # pressure = 8
+    # base penalty = 16
+    # enjoyment resistance = .375
+    # repetition penalty = 10
+    #
+    # Morning time = -12
+    #
+    # Total = -22
+
+    assert (
+        result["score"]
+        == -22
+    )
+
+    assert (
+        "Recent repetition: -10.0"
+        in result["reasons"]
+    )
