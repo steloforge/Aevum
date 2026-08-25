@@ -6,6 +6,11 @@ importance, confidence, clarity, recall history, and accessibility.
 """
 
 
+# ============================================================
+# MEMORY LAYERS
+# ============================================================
+
+
 def update_memory_layer(memory):
     clarity = memory["clarity"]
 
@@ -23,6 +28,11 @@ def update_memory_layer(memory):
 
     else:
         memory["memory_layer"] = "dormant"
+
+
+# ============================================================
+# MEMORY CREATION
+# ============================================================
 
 
 def create_memory(
@@ -44,29 +54,47 @@ def create_memory(
 
     memory = {
         "id": len(character["memory"]) + 1,
+
         "description": description,
         "interpretation": interpretation,
+
         "people": people,
         "location": location,
         "associations": associations,
+
         "emotions": emotions,
         "emotion_causes": emotion_causes,
+
         "importance": importance,
         "confidence": confidence,
         "clarity": clarity,
+
         "recall_count": 0,
         "memory_layer": "active",
+
         "created_day": world["day"],
         "last_recalled_day": world["day"],
         "last_decay_day": world["day"],
     }
 
-def recall_memories(character):
-    """
-    Display all autobiographical memories currently stored
-    by a character.
-    """
+    update_memory_layer(memory)
 
+    character["memory"].append(memory)
+
+    print(
+        f"Memory #{memory['id']} created for "
+        f"{character['name']} on Day {world['day']}."
+    )
+
+    return memory
+
+
+# ============================================================
+# MEMORY DISPLAY
+# ============================================================
+
+
+def recall_memories(character):
     print(
         f"\n--- {character['name']}'s Memories ---\n"
     )
@@ -76,49 +104,57 @@ def recall_memories(character):
         return
 
     for memory in character["memory"]:
-        print(f"Memory #{memory['id']}")
+        print(
+            f"Memory #{memory['id']}"
+        )
+
         print(
             f"Remembered: "
             f"{memory['description']}"
         )
+
         print(
             f"Interpretation: "
             f"{memory['interpretation']}"
         )
+
         print(
             f"Importance: "
             f"{memory['importance']}"
         )
+
         print(
             f"Clarity: "
             f"{round(memory['clarity'], 2)}"
         )
+
         print(
             f"Confidence: "
             f"{memory['confidence']}"
         )
+
         print(
             f"Memory Layer: "
             f"{memory['memory_layer']}"
         )
+
         print(
             f"Recall Count: "
             f"{memory['recall_count']}"
         )
+
         print()
+
+
+# ============================================================
+# LAYERED MEMORY SEARCH
+# ============================================================
 
 
 def search_memory(
     character,
     clues,
 ):
-    """
-    Search a character's autobiographical memories using clues.
-
-    Deeper memory layers require more matching clues and receive
-    an additional retrieval penalty.
-    """
-
     matches = []
 
     layer_requirements = {
@@ -145,7 +181,9 @@ def search_memory(
             [
                 memory["description"],
                 memory["interpretation"],
-                " ".join(memory["people"]),
+                " ".join(
+                    memory["people"]
+                ),
                 memory["location"],
                 " ".join(
                     memory["associations"]
@@ -158,7 +196,9 @@ def search_memory(
 
             if clue_lower in searchable_text:
                 raw_score += 1
-                matched_clues.append(clue)
+                matched_clues.append(
+                    clue
+                )
 
         required_score = (
             layer_requirements.get(
@@ -167,6 +207,8 @@ def search_memory(
             )
         )
 
+        # Faded and deeper memories become
+        # progressively harder to retrieve.
         layer_penalty = (
             layer_penalties.get(
                 memory["memory_layer"],
@@ -183,7 +225,8 @@ def search_memory(
             matches.append(
                 {
                     "memory": memory,
-                    "raw_score": raw_score,
+                    "raw_score":
+                        raw_score,
                     "adjusted_score":
                         adjusted_score,
                     "required_score":
@@ -200,16 +243,4 @@ def search_memory(
         reverse=True,
     )
 
-    return matches    
-    
-    
-    update_memory_layer(memory)
-
-    character["memory"].append(memory)
-
-    print(
-        f"Memory #{memory['id']} created for "
-        f"{character['name']} on Day {world['day']}."
-    )
-
-    return memory
+    return matches
