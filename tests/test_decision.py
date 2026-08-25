@@ -1080,3 +1080,150 @@ def test_family_duty_value_effect_combines_relevant_values():
     assert result[
         "total_effect"
     ] == 12.9
+
+def test_action_score_includes_full_value_effect():
+    character = {
+        "needs": {
+            "family_responsibility": 100,
+        },
+
+        "activity_preferences": {
+            "family_duty": 50,
+        },
+
+        "recent_actions": [],
+
+        "values": {
+            "family": 80,
+            "community": 60,
+            "personal_honor": 70,
+        },
+    }
+
+    world = {
+        "day": 4,
+        "hour": 10,
+    }
+
+    action = {
+        "name":
+            "Help at the family shop",
+
+        "action_type":
+            "family_duty",
+
+        "satisfies": {},
+
+        "tags": [
+            "family",
+            "community",
+            "honor",
+        ],
+    }
+
+    result = (
+        score_self_directed_action(
+            character,
+            world,
+            action,
+        )
+    )
+
+    # Time of day:
+    # +3
+    #
+    # Values:
+    # family = +6.4
+    # community = +3.0
+    # honor = +3.5
+    #
+    # Total:
+    # 3 + 12.9 = 15.9
+
+    assert (
+        result["score"]
+        == 15.9
+    )
+
+    assert (
+        "Family value: +6.4"
+        in result["reasons"]
+    )
+
+    assert (
+        "Community value: +3.0"
+        in result["reasons"]
+    )
+
+    assert (
+        "Honor value: +3.5"
+        in result["reasons"]
+    )
+
+
+def test_low_family_pressure_reduces_value_influence():
+    character = {
+        "needs": {
+            "family_responsibility": 0,
+        },
+
+        "activity_preferences": {
+            "family_duty": 50,
+        },
+
+        "recent_actions": [],
+
+        "values": {
+            "family": 80,
+            "community": 60,
+            "personal_honor": 70,
+        },
+    }
+
+    world = {
+        "day": 4,
+        "hour": 10,
+    }
+
+    action = {
+        "name":
+            "Help at the family shop",
+
+        "action_type":
+            "family_duty",
+
+        "satisfies": {},
+
+        "tags": [
+            "family",
+            "community",
+            "honor",
+        ],
+    }
+
+    result = (
+        score_self_directed_action(
+            character,
+            world,
+            action,
+        )
+    )
+
+    # Value relevance = 0.25
+    #
+    # Full value effect = 12.9
+    # Scaled value effect = 3.225 -> 3.23
+    #
+    # Time bonus = +3
+    #
+    # Total = 6.23
+
+    assert (
+        result["score"]
+        == 6.23
+    )
+
+    assert (
+        "Current value relevance: x0.25"
+        in result["reasons"]
+    )
