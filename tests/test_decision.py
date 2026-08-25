@@ -413,3 +413,307 @@ def test_eating_gets_early_morning_meal_bonus():
         result["reason"]
         == "Natural meal time"
     )
+
+def test_neutral_activity_has_no_preference_effect():
+    character = {
+        "activity_preferences": {},
+    }
+
+    world = {
+        "day": 1,
+        "hour": 12,
+    }
+
+    result = (
+        calculate_repetition_effect(
+            character,
+            world,
+            "train",
+        )
+    )
+
+    assert result["preference"] == 50
+    assert result["preference_bonus"] == 0
+    assert result["repetition_pressure"] == 0
+    assert result["repetition_penalty"] == 0
+    assert result["net_effect"] == 0
+
+
+def test_liked_activity_gets_preference_bonus():
+    character = {
+        "activity_preferences": {
+            "train": 80,
+        },
+    }
+
+    world = {
+        "day": 1,
+        "hour": 12,
+    }
+
+    result = (
+        calculate_repetition_effect(
+            character,
+            world,
+            "train",
+        )
+    )
+
+    assert result["preference"] == 80
+    assert result["preference_bonus"] == 3
+    assert result["net_effect"] == 3
+
+
+def test_disliked_activity_gets_preference_penalty():
+    character = {
+        "activity_preferences": {
+            "family_duty": 30,
+        },
+    }
+
+    world = {
+        "day": 1,
+        "hour": 12,
+    }
+
+    result = (
+        calculate_repetition_effect(
+            character,
+            world,
+            "family_duty",
+        )
+    )
+
+    assert result["preference_bonus"] == -2
+    assert result["net_effect"] == -2
+
+
+def test_recent_action_creates_repetition_pressure():
+    character = {
+        "activity_preferences": {
+            "train": 50,
+        },
+        "recent_actions": [
+            {
+                "action_type": "train",
+                "day": 1,
+                "hour": 10,
+                "duration_hours": 2,
+            },
+        ],
+    }
+
+    world = {
+        "day": 1,
+        "hour": 12,
+    }
+
+    result = (
+        calculate_repetition_effect(
+            character,
+            world,
+            "train",
+        )
+    )
+
+    assert (
+        result["repetition_pressure"]
+        == 2
+    )
+
+    assert (
+        result["repetition_penalty"]
+        == 2.5
+    )
+
+    assert result["net_effect"] == -2.5
+
+
+def test_older_repetition_has_less_influence():
+    character = {
+        "activity_preferences": {
+            "train": 50,
+        },
+        "recent_actions": [
+            {
+                "action_type": "train",
+                "day": 1,
+                "hour": 10,
+                "duration_hours": 2,
+            },
+        ],
+    }
+
+    world = {
+        "day": 1,
+        "hour": 20,
+    }
+
+    result = (
+        calculate_repetition_effect(
+            character,
+            world,
+            "train",
+        )
+    )
+
+    assert (
+        result["repetition_pressure"]
+        == 0.6
+    )
+
+
+def test_unrelated_actions_do_not_create_repetition_pressure():
+    character = {
+        "activity_preferences": {
+            "train": 50,
+        },
+        "recent_actions": [
+            {
+                "action_type":
+                    "social_family",
+                "day": 1,
+                "hour": 10,
+                "duration_hours": 3,
+            },
+        ],
+    }
+
+    world = {
+        "day": 1,
+        "hour": 12,
+    }
+
+    result = (
+        calculate_repetition_effect(
+            character,
+            world,
+            "train",
+        )
+    )
+
+    assert (
+        result["repetition_pressure"]
+        == 0
+    )
+
+
+def test_enjoyed_activity_resists_repetition_fatigue():
+    world = {
+        "day": 1,
+        "hour": 12,
+    }
+
+    recent_action = {
+        "action_type": "train",
+        "day": 1,
+        "hour": 10,
+        "duration_hours": 2,
+    }
+
+    neutral_character = {
+        "activity_preferences": {
+            "train": 50,
+        },
+        "recent_actions": [
+            recent_action,
+        ],
+    }
+
+    enthusiastic_character = {
+        "activity_preferences": {
+            "train": 90,
+        },
+        "recent_actions": [
+            recent_action,
+        ],
+    }
+
+    neutral = (
+        calculate_repetition_effect(
+            neutral_character,
+            world,
+            "train",
+        )
+    )
+
+    enthusiastic = (
+        calculate_repetition_effect(
+            enthusiastic_character,
+            world,
+            "train",
+        )
+    )
+
+    assert (
+        enthusiastic[
+            "repetition_penalty"
+        ]
+        < neutral[
+            "repetition_penalty"
+        ]
+    )
+
+
+def test_record_recent_action_stores_action_history():
+    character = {}
+
+    world = {
+        "day": 4,
+        "hour": 15,
+    }
+
+    record_recent_action(
+        character,
+        world,
+        "train",
+        2,
+    )
+
+    assert (
+        character["recent_actions"]
+        == [
+            {
+                "action_type": "train",
+                "day": 4,
+                "hour": 15,
+                "duration_hours": 2,
+            }
+        ]
+    )
+
+
+def test_record_recent_action_removes_old_history():
+    character = {
+        "recent_actions": [
+            {
+                "action_type": "train",
+                "day": 1,
+                "hour": 10,
+                "duration_hours": 2,
+            },
+        ],
+    }
+
+    world = {
+        "day": 4,
+        "hour": 12,
+    }
+
+    record_recent_action(
+        character,
+        world,
+        "eat",
+        1,
+    )
+
+    assert len(
+        character["recent_actions"]
+    ) == 1
+
+    assert (
+        character[
+            "recent_actions"
+        ][0]["action_type"]
+        == "eat"
+    )
