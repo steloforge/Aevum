@@ -182,6 +182,103 @@ def test_world_event_flows_through_character_cognition():
         ]
     )
 
+    
+    # --------------------------------------------------------
+    # RELATIONSHIPS
+    # --------------------------------------------------------
+
+    assert (
+        "Resident"
+        in character[
+            "relationships"
+        ]
+    )
+
+    assert (
+        "Neighbor"
+        in character[
+            "relationships"
+        ]
+    )
+
+    assert (
+        character[
+            "relationships"
+        ][
+            "Resident"
+        ][
+            "familiarity"
+        ]
+        == 5
+    )
+
+    assert (
+        character[
+            "relationships"
+        ][
+            "Neighbor"
+        ][
+            "familiarity"
+        ]
+        == 5
+    )
+
+    # --------------------------------------------------------
+    # RELATIONSHIPS
+    # --------------------------------------------------------
+
+    assert (
+        "Resident"
+        in character[
+            "relationships"
+        ]
+    )
+
+    assert (
+        "Neighbor"
+        in character[
+            "relationships"
+        ]
+    )
+
+    assert (
+        character[
+            "relationships"
+        ][
+            "Resident"
+        ][
+            "familiarity"
+        ]
+        == 5
+    )
+
+    assert (
+        character[
+            "relationships"
+        ][
+            "Neighbor"
+        ][
+            "familiarity"
+        ]
+        == 5
+    )
+
+    assert (
+        "Community Support"
+        not in character[
+            "relationships"
+        ]
+    )
+
+    assert set(
+        result[
+            "relationship_updates"
+        ]
+    ) == {
+        "Resident",
+        "Neighbor",
+    }
+    
     # --------------------------------------------------------
     # IDENTITY
     # --------------------------------------------------------
