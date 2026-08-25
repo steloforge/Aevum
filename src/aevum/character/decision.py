@@ -108,3 +108,66 @@ def calculate_need_pressure(
         "reasons":
             reasons,
     }
+
+
+def calculate_sleep_pressure(
+    character,
+    action,
+):
+    """
+    Calculate the special fatigue pressure for full sleep.
+
+    Ordinary tiredness does not immediately create a strong
+    desire for a full sleep cycle. Only fatigue above 20
+    contributes to sleep pressure.
+    """
+
+    if action.get(
+        "action_type"
+    ) != "sleep":
+        return {
+            "score": 0,
+            "reasons": [],
+        }
+
+    fatigue = character.get(
+        "needs",
+        {},
+    ).get(
+        "fatigue",
+        0,
+    )
+
+    fatigue_urgency = (
+        calculate_need_urgency(
+            "fatigue",
+            fatigue,
+        )
+    )
+
+    effective_fatigue = max(
+        fatigue - 20,
+        0,
+    )
+
+    sleep_need_score = (
+        effective_fatigue
+        * 0.70
+        * fatigue_urgency
+    )
+
+    return {
+        "score":
+            round(
+                sleep_need_score,
+                2,
+            ),
+
+        "reasons": [
+            (
+                "Sleep fatigue pressure: "
+                f"+{round(sleep_need_score, 2)} "
+                f"(urgency x{fatigue_urgency})"
+            )
+        ],
+    }
