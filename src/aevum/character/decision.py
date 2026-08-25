@@ -894,6 +894,65 @@ def score_self_directed_action(
             f"- {time_effect['reason']}"
         )
 
+    # ========================================================
+    # 5. VALUES
+    # ========================================================
+
+    value_effect = (
+        calculate_value_effect(
+            character,
+            action,
+        )
+    )
+
+    score += value_effect[
+        "total_effect"
+    ]
+
+    if (
+        value_effect[
+            "value_relevance"
+        ]
+        != 1.0
+    ):
+        reasons.append(
+            "Current value relevance: "
+            f"x{value_effect['value_relevance']}"
+        )
+
+    if (
+        value_effect[
+            "family_bonus"
+        ]
+        > 0
+    ):
+        reasons.append(
+            "Family value: "
+            f"+{value_effect['family_bonus']}"
+        )
+
+    if (
+        value_effect[
+            "community_bonus"
+        ]
+        > 0
+    ):
+        reasons.append(
+            "Community value: "
+            f"+{value_effect['community_bonus']}"
+        )
+
+    if (
+        value_effect[
+            "honor_bonus"
+        ]
+        > 0
+    ):
+        reasons.append(
+            "Honor value: "
+            f"+{value_effect['honor_bonus']}"
+        )
+
     return {
         "action":
             action["name"],
