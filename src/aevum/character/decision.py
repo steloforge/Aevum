@@ -8,6 +8,206 @@ It does not determine whether an intention actually succeeds.
 Authoritative action validation and resolution belong to Axiom.
 """
 
+from aevum.world.time import (
+    get_time_period,
+)
+
+def calculate_time_of_day_effect(
+    world,
+    action_type,
+):
+    """
+    Calculate how appropriate an action is for the current
+    time of day.
+
+    This represents contextual preference, not world-law
+    availability. An action may be undesirable at a certain
+    time without being impossible.
+    """
+
+    period = get_time_period(
+        world
+    )
+
+    effect = 0
+    reason = None
+
+    # ========================================================
+    # EATING
+    # ========================================================
+
+    if action_type == "eat":
+
+        if period in [
+            "early_morning",
+            "afternoon",
+            "evening",
+        ]:
+            effect += 2
+            reason = (
+                "Natural meal time"
+            )
+
+    # ========================================================
+    # FAMILY SHOP WORK
+    # ========================================================
+
+    elif (
+        action_type
+        == "family_duty"
+    ):
+
+        if period in [
+            "morning",
+            "afternoon",
+        ]:
+            effect += 3
+            reason = (
+                "Normal shop hours"
+            )
+
+        elif period == "evening":
+            effect -= 2
+            reason = (
+                "Shop day is winding down"
+            )
+
+        elif period in [
+            "night",
+            "late_night",
+        ]:
+            effect -= 8
+            reason = (
+                "Shop is likely closed"
+            )
+
+    # ========================================================
+    # SECRET TRAINING
+    # ========================================================
+
+    elif action_type == "train":
+
+        if period == "evening":
+            effect += 2
+            reason = (
+                "More privacy for secret training"
+            )
+
+        elif period == "night":
+            effect += 3
+            reason = (
+                "Night provides privacy"
+            )
+
+        elif period == "late_night":
+            effect -= 3
+            reason = (
+                "Too late for effective training"
+            )
+
+    # ========================================================
+    # FAMILY TIME
+    # ========================================================
+
+    elif (
+        action_type
+        == "social_family"
+    ):
+
+        if period == "evening":
+            effect += 5
+            reason = (
+                "Family is likely together"
+            )
+
+        elif period == "night":
+            effect += 2
+            reason = (
+                "Quiet family time"
+            )
+
+        elif period == "late_night":
+            effect -= 4
+            reason = (
+                "Family is likely sleeping"
+            )
+
+    # ========================================================
+    # REST
+    # ========================================================
+
+    elif action_type == "rest":
+
+        if period == "evening":
+            effect += 2
+            reason = (
+                "The day is winding down"
+            )
+
+        elif period == "night":
+            effect += 6
+            reason = (
+                "Natural time to rest"
+            )
+
+        elif period == "late_night":
+            effect += 12
+            reason = (
+                "Very strong sleep-time pressure"
+            )
+
+    # ========================================================
+    # SLEEP
+    # ========================================================
+
+    elif action_type == "sleep":
+
+        if period == "early_morning":
+            effect -= 8
+            reason = (
+                "Normally too early in the day to sleep"
+            )
+
+        elif period == "morning":
+            effect -= 12
+            reason = (
+                "The character would normally be awake"
+            )
+
+        elif period == "afternoon":
+            effect -= 10
+            reason = (
+                "Too early for normal sleep"
+            )
+
+        elif period == "evening":
+            effect -= 6
+            reason = (
+                "Still somewhat early for a full night's sleep"
+            )
+
+        elif period == "night":
+            effect += 10
+            reason = (
+                "Natural sleeping hours"
+            )
+
+        elif period == "late_night":
+            effect += 20
+            reason = (
+                "The body strongly expects sleep"
+            )
+
+    return {
+        "period":
+            period,
+
+        "effect":
+            effect,
+
+        "reason":
+            reason,
+    }
 
 def calculate_need_urgency(
     need_name,
