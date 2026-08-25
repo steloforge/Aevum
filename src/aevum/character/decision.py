@@ -371,3 +371,193 @@ def calculate_sleep_pressure(
             )
         ],
     }
+
+def record_recent_action(
+    character,
+    world,
+    action_type,
+    duration_hours,
+):
+    """
+    Record a completed autonomous action so recent
+    repetition can influence future decisions.
+
+    Only a small rolling history is retained.
+    """
+
+    if "recent_actions" not in character:
+        character["recent_actions"] = []
+
+    character["recent_actions"].append({
+        "action_type":
+            action_type,
+
+        "day":
+            world["day"],
+
+        "hour":
+            world["hour"],
+
+        "duration_hours":
+            duration_hours,
+    })
+
+    # Keep only reasonably recent history.
+    character["recent_actions"] = [
+        action
+        for action
+        in character["recent_actions"]
+        if (
+            world["day"]
+            - action["day"]
+        ) <= 2
+    ]
+
+def calculate_repetition_effect(
+    character,
+    world,
+    action_type,
+):
+    """
+    Calculate the combined effect of personal activity
+    preference and recent repetition.
+
+    Characters are more inclined toward activities they
+    enjoy, but repeatedly performing the same activity
+    creates satiation.
+
+    Enjoyed activities resist repetition fatigue better
+    than disliked activities.
+    """
+
+    recent_actions = character.get(
+        "recent_actions",
+        [],
+    )
+
+    preference = character.get(
+        "activity_preferences",
+        {},
+    ).get(
+        action_type,
+        50,
+    )
+
+    repetition_pressure = 0
+
+    # ========================================================
+    # RECENT REPETITION
+    # ========================================================
+
+    for past_action in recent_actions:
+
+        if (
+            past_action["action_type"]
+            != action_type
+        ):
+            continue
+
+        hours_ago = (
+            (
+                world["day"]
+                - past_action["day"]
+            )
+            * 24
+            + (
+                world["hour"]
+                - past_action["hour"]
+            )
+        )
+
+        if hours_ago <= 4:
+            recency_weight = 1.0
+
+        elif hours_ago <= 8:
+            recency_weight = 0.6
+
+        elif hours_ago <= 16:
+            recency_weight = 0.3
+
+        else:
+            recency_weight = 0.1
+
+        repetition_pressure += (
+            past_action.get(
+                "duration_hours",
+                1,
+            )
+            * recency_weight
+        )
+
+    # ========================================================
+    # PERSONAL PREFERENCE
+    # ========================================================
+
+    # 50 is neutral.
+    #
+    # Above 50:
+    # "I enjoy doing this."
+    #
+    # Below 50:
+    # "I don't particularly want to do this."
+
+    preference_bonus = (
+        preference - 50
+    ) * 0.10
+
+    # ========================================================
+    # SATIATION
+    # ========================================================
+
+    base_repetition_penalty = (
+        repetition_pressure * 2
+    )
+
+    # Enjoyment makes a character more resistant to
+    # becoming tired of repeating an activity.
+
+    enjoyment_resistance = (
+        preference / 100
+    ) * 0.75
+
+    repetition_penalty = (
+        base_repetition_penalty
+        * (
+            1
+            - enjoyment_resistance
+        )
+    )
+
+    net_effect = (
+        preference_bonus
+        - repetition_penalty
+    )
+
+    return {
+        "preference":
+            preference,
+
+        "preference_bonus":
+            round(
+                preference_bonus,
+                2,
+            ),
+
+        "repetition_pressure":
+            round(
+                repetition_pressure,
+                2,
+            ),
+
+        "repetition_penalty":
+            round(
+                repetition_penalty,
+                2,
+            ),
+
+        "net_effect":
+            round(
+                net_effect,
+                2,
+            ),
+    }
