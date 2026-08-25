@@ -1401,6 +1401,28 @@ def score_self_directed_action(
             "Rule-risk hesitation: "
             f"-{risk_effect['risk_penalty']}"
         )
+            
+    return {
+        "action":
+            action["name"],
+
+        "action_type":
+            action[
+                "action_type"
+            ],
+
+        "score":
+            round(
+                score,
+                2,
+            ),
+
+        "reasons":
+            reasons,
+
+        "action":
+            action,
+    }
 
 
 # ============================================================
@@ -1494,23 +1516,4 @@ def choose_self_directed_action(
 
         "unavailable_actions":
             unavailable,
-    }
-    
-    return {
-        "action":
-            action["name"],
-
-        "action_type":
-            action[
-                "action_type"
-            ],
-
-        "score":
-            round(
-                score,
-                2,
-            ),
-
-        "reasons":
-            reasons,
     }
