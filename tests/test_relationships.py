@@ -295,3 +295,113 @@ def test_hostile_relationship_interpretation():
         result["emotional_tone"]
         == "Strongly Negative"
     )
+
+def test_relationship_effects_apply_only_once():
+    character = make_character()
+
+    memory = {
+        "people": [
+            "Test Character",
+            "Friend",
+        ],
+
+        "emotions": {
+            "happiness": 50,
+        },
+
+        "emotion_causes": {
+            "happiness":
+                "Friend",
+        },
+    }
+
+    first_updates = (
+        update_relationship_from_memory(
+            character,
+            memory,
+        )
+    )
+
+    relationship = character[
+        "relationships"
+    ]["Friend"]
+
+    first_state = (
+        relationship.copy()
+    )
+
+    second_updates = (
+        update_relationship_from_memory(
+            character,
+            memory,
+        )
+    )
+
+    assert (
+        first_updates
+        == ["Friend"]
+    )
+
+    assert second_updates == []
+
+    assert (
+        character[
+            "relationships"
+        ]["Friend"]
+        == first_state
+    )
+
+    assert (
+        memory[
+            "relationship_effects_applied"
+        ]
+        is True
+    )
+
+
+def test_abstract_emotion_cause_does_not_become_relationship():
+    character = make_character()
+
+    memory = {
+        "people": [
+            "Test Character",
+            "Resident",
+        ],
+
+        "emotions": {
+            "happiness": 50,
+        },
+
+        "emotion_causes": {
+            "happiness":
+                "Community Support",
+        },
+    }
+
+    update_relationship_from_memory(
+        character,
+        memory,
+    )
+
+    assert (
+        "Community Support"
+        not in character[
+            "relationships"
+        ]
+    )
+
+    resident = character[
+        "relationships"
+    ]["Resident"]
+
+    # Resident participated in the event,
+    # so familiarity increases.
+    assert (
+        resident["familiarity"]
+        == 5
+    )
+
+    # But the abstract cause is not attributed
+    # to Resident personally.
+    assert resident["trust"] == 50
+    assert resident["affection"] == 0
