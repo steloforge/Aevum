@@ -11,7 +11,7 @@ from aevum.axiom.actions import (
     validate_action,
 )
 
-from aevum.world import (
+from aevum.world.events import (
     create_world_event,
 )
 
