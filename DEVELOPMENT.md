@@ -137,3 +137,17 @@ experience rather than authoritative properties of Axiom's world event.
 Before integration, verify how emotional causes should map to specific
 participants so abstract causes such as "Community Support" or "Family" do
 not accidentally become relationship targets.
+
+### Sleep system separation
+
+Sleep currently spans multiple subsystems and should remain separated during migration:
+
+- **Sleep decision scoring** determines when the character wants to sleep.
+- **Sleep execution** advances world time and updates needs.
+- **Sleep recovery** applies stronger emotional recovery.
+- **Sleep consolidation** updates memory state.
+- **Sleep outcome events** record canonical facts such as `slept`,
+  `self_care`, and `recovered_energy`.
+
+These components should be migrated and tested independently rather than
+combined into one sleep function.
