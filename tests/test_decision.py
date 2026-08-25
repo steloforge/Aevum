@@ -1341,3 +1341,157 @@ def test_training_goal_effect_uses_ambition_and_discipline():
         result["total_effect"]
         == 9.4
     )
+
+def test_training_score_includes_goal_effect():
+    character = {
+        "needs": {
+            "training_drive": 100,
+        },
+
+        "activity_preferences": {
+            "train": 50,
+        },
+
+        "recent_actions": [],
+
+        "values": {},
+
+        "traits": {
+            "ambition": 80,
+        },
+
+        "skills": {
+            "discipline": 60,
+        },
+    }
+
+    world = {
+        "day": 4,
+        "hour": 21,
+    }
+
+    action = {
+        "name":
+            "Practice knight techniques in secret",
+
+        "action_type":
+            "train",
+
+        "tags": [
+            "ambition",
+            "discipline",
+        ],
+
+        "satisfies": {},
+    }
+
+    result = (
+        score_self_directed_action(
+            character,
+            world,
+            action,
+        )
+    )
+
+    # Time of day:
+    # +3
+    #
+    # Goal effect:
+    # ambition = +6.4
+    # discipline = +3.0
+    #
+    # Total = 12.4
+
+    assert (
+        result["score"]
+        == 12.4
+    )
+
+    assert (
+        "Current goal relevance: x1.0"
+        in result["reasons"]
+    )
+
+    assert (
+        "Ambition: +6.4"
+        in result["reasons"]
+    )
+
+    assert (
+        "Discipline: +3.0"
+        in result["reasons"]
+    )
+
+
+def test_low_training_drive_reduces_goal_effect():
+    character = {
+        "needs": {
+            "training_drive": 0,
+        },
+
+        "activity_preferences": {
+            "train": 50,
+        },
+
+        "recent_actions": [],
+
+        "values": {},
+
+        "traits": {
+            "ambition": 80,
+        },
+
+        "skills": {
+            "discipline": 60,
+        },
+    }
+
+    world = {
+        "day": 4,
+        "hour": 21,
+    }
+
+    action = {
+        "name":
+            "Practice knight techniques in secret",
+
+        "action_type":
+            "train",
+
+        "tags": [
+            "ambition",
+            "discipline",
+        ],
+
+        "satisfies": {},
+    }
+
+    result = (
+        score_self_directed_action(
+            character,
+            world,
+            action,
+        )
+    )
+
+    # Goal relevance = 0.25
+    #
+    # Ambition:
+    # 80 * .08 * .25 = 1.6
+    #
+    # Discipline:
+    # 60 * .05 * .25 = .75
+    #
+    # Time = +3
+    #
+    # Total = 5.35
+
+    assert (
+        result["score"]
+        == 5.35
+    )
+
+    assert (
+        "Current goal relevance: x0.25"
+        in result["reasons"]
+    )
