@@ -1085,6 +1085,54 @@ def score_self_directed_action(
             f"+{value_effect['honor_bonus']}"
         )
 
+    # ========================================================
+    # 6. GOAL RELEVANCE / AMBITION / DISCIPLINE
+    # ========================================================
+
+    goal_effect = (
+        calculate_goal_effect(
+            character,
+            action,
+        )
+    )
+
+    score += goal_effect[
+        "total_effect"
+    ]
+
+    if (
+        action[
+            "action_type"
+        ]
+        == "train"
+    ):
+        reasons.append(
+            "Current goal relevance: "
+            f"x{goal_effect['goal_relevance']}"
+        )
+
+    if (
+        goal_effect[
+            "ambition_bonus"
+        ]
+        > 0
+    ):
+        reasons.append(
+            "Ambition: "
+            f"+{goal_effect['ambition_bonus']}"
+        )
+
+    if (
+        goal_effect[
+            "discipline_bonus"
+        ]
+        > 0
+    ):
+        reasons.append(
+            "Discipline: "
+            f"+{goal_effect['discipline_bonus']}"
+        )
+    
     return {
         "action":
             action["name"],
