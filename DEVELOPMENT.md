@@ -96,3 +96,43 @@ Examples:
 - relationship development across many interactions
 - belief reinforcement and contradiction over time
 - autonomous daily behavior over weeks or months
+
+## Relationships
+
+### Relationship updates are not yet integrated into outcome processing
+
+**Status:** Relationship model implemented and tested; pipeline integration pending
+
+Aevum currently contains a relationship system capable of updating:
+
+- trust
+- respect
+- familiarity
+- affection
+- fear
+
+from autobiographical memories and their emotional causes.
+
+However, the original prototype's `process_outcome_for_character()` pipeline
+does not call `update_relationship_from_memory()` after creating a memory.
+
+As a result, the relationship system currently works independently but is
+not automatically updated when a character processes a world event.
+
+### Planned integration
+
+The intended flow should be evaluated as:
+
+World Event
+→ Perception
+→ Interpretation
+→ Emotional Response
+→ Memory Creation
+→ Relationship Update
+
+Relationship changes should remain subjective consequences of a character's
+experience rather than authoritative properties of Axiom's world event.
+
+Before integration, verify how emotional causes should map to specific
+participants so abstract causes such as "Community Support" or "Family" do
+not accidentally become relationship targets.
