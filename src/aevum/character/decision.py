@@ -598,6 +598,148 @@ def calculate_time_of_day_effect(
 
 
 # ============================================================
+# Calculate Value Reference
+# ============================================================
+
+def calculate_value_relevance(
+    character,
+    action_type,
+):
+    """
+    Calculate how relevant a character's values are
+    to the current action.
+
+    Values should reinforce an existing reason to act,
+    rather than always applying at full strength.
+    """
+
+    if action_type != "family_duty":
+        return 1.0
+
+    needs = character.get(
+        "needs",
+        {},
+    )
+
+    family_pressure = needs.get(
+        "family_responsibility",
+        0,
+    )
+
+    relevance = (
+        0.25
+        + (family_pressure / 100) * 0.75
+    )
+
+    return round(
+        relevance,
+        3,
+    )
+
+# ============================================================
+# Calculate Value Effect
+# ============================================================
+
+def calculate_value_effect(
+    character,
+    action,
+):
+    """
+    Calculate the value-based contribution to an
+    autonomous action's score.
+    """
+
+    values = character.get(
+        "values",
+        {},
+    )
+
+    tags = action.get(
+        "tags",
+        [],
+    )
+
+    value_relevance = (
+        calculate_value_relevance(
+            character,
+            action["action_type"],
+        )
+    )
+
+    family_bonus = 0
+    community_bonus = 0
+    honor_bonus = 0
+
+    if "family" in tags:
+        family_bonus = (
+            values.get(
+                "family",
+                0,
+            )
+            * 0.08
+            * value_relevance
+        )
+
+    if "community" in tags:
+        community_bonus = (
+            values.get(
+                "community",
+                0,
+            )
+            * 0.05
+            * value_relevance
+        )
+
+    if "honor" in tags:
+        honor_bonus = (
+            values.get(
+                "personal_honor",
+                0,
+            )
+            * 0.05
+            * value_relevance
+        )
+
+    total_effect = (
+        family_bonus
+        + community_bonus
+        + honor_bonus
+    )
+
+    return {
+        "value_relevance":
+            round(
+                value_relevance,
+                3,
+            ),
+
+        "family_bonus":
+            round(
+                family_bonus,
+                2,
+            ),
+
+        "community_bonus":
+            round(
+                community_bonus,
+                2,
+            ),
+
+        "honor_bonus":
+            round(
+                honor_bonus,
+                2,
+            ),
+
+        "total_effect":
+            round(
+                total_effect,
+                2,
+            ),
+    }
+
+
+# ============================================================
 # SELF-DIRECTED ACTION SCORING
 # ============================================================
 
