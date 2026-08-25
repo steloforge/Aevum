@@ -7,7 +7,7 @@ from aevum.character.decision import (
     record_recent_action,
     score_self_directed_action,
     calculate_value_relevance,
-    calucate_value_effect,
+    calculate_value_effect,
 )
 
 
