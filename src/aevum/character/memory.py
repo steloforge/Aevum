@@ -61,6 +61,148 @@ def create_memory(
         "last_decay_day": world["day"],
     }
 
+def recall_memories(character):
+    """
+    Display all autobiographical memories currently stored
+    by a character.
+    """
+
+    print(
+        f"\n--- {character['name']}'s Memories ---\n"
+    )
+
+    if len(character["memory"]) == 0:
+        print("No memories found.")
+        return
+
+    for memory in character["memory"]:
+        print(f"Memory #{memory['id']}")
+        print(
+            f"Remembered: "
+            f"{memory['description']}"
+        )
+        print(
+            f"Interpretation: "
+            f"{memory['interpretation']}"
+        )
+        print(
+            f"Importance: "
+            f"{memory['importance']}"
+        )
+        print(
+            f"Clarity: "
+            f"{round(memory['clarity'], 2)}"
+        )
+        print(
+            f"Confidence: "
+            f"{memory['confidence']}"
+        )
+        print(
+            f"Memory Layer: "
+            f"{memory['memory_layer']}"
+        )
+        print(
+            f"Recall Count: "
+            f"{memory['recall_count']}"
+        )
+        print()
+
+
+def search_memory(
+    character,
+    clues,
+):
+    """
+    Search a character's autobiographical memories using clues.
+
+    Deeper memory layers require more matching clues and receive
+    an additional retrieval penalty.
+    """
+
+    matches = []
+
+    layer_requirements = {
+        "active": 1,
+        "accessible": 1,
+        "faded": 2,
+        "buried": 3,
+        "dormant": 4,
+    }
+
+    layer_penalties = {
+        "active": 0,
+        "accessible": 0.5,
+        "faded": 1.0,
+        "buried": 1.5,
+        "dormant": 2.0,
+    }
+
+    for memory in character["memory"]:
+        raw_score = 0
+        matched_clues = []
+
+        searchable_text = " ".join(
+            [
+                memory["description"],
+                memory["interpretation"],
+                " ".join(memory["people"]),
+                memory["location"],
+                " ".join(
+                    memory["associations"]
+                ),
+            ]
+        ).lower()
+
+        for clue in clues:
+            clue_lower = clue.lower()
+
+            if clue_lower in searchable_text:
+                raw_score += 1
+                matched_clues.append(clue)
+
+        required_score = (
+            layer_requirements.get(
+                memory["memory_layer"],
+                1,
+            )
+        )
+
+        layer_penalty = (
+            layer_penalties.get(
+                memory["memory_layer"],
+                0,
+            )
+        )
+
+        adjusted_score = (
+            raw_score
+            - layer_penalty
+        )
+
+        if raw_score >= required_score:
+            matches.append(
+                {
+                    "memory": memory,
+                    "raw_score": raw_score,
+                    "adjusted_score":
+                        adjusted_score,
+                    "required_score":
+                        required_score,
+                    "matched_clues":
+                        matched_clues,
+                }
+            )
+
+    matches.sort(
+        key=lambda x: x[
+            "adjusted_score"
+        ],
+        reverse=True,
+    )
+
+    return matches    
+    
+    
     update_memory_layer(memory)
 
     character["memory"].append(memory)
