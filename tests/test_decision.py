@@ -12,6 +12,7 @@ from aevum.character.decision import (
     calculate_goal_relevance,
     calculate_risk_effect,
     generate_self_directed_actions,
+    is_self_directed_action_available,
 )
 
 
@@ -1705,4 +1706,109 @@ def test_generate_self_directed_actions():
 
     assert training["satisfies"] == {
         "training_drive": 40,
+    }
+
+def test_family_shop_is_available_during_open_hours():
+    character = {}
+
+    world = {
+        "hour": 10,
+    }
+
+    action = {
+        "action_type":
+            "family_duty",
+    }
+
+    result = (
+        is_self_directed_action_available(
+            character,
+            world,
+            action,
+        )
+    )
+
+    assert result == {
+        "available": True,
+        "reason": None,
+    }
+
+
+def test_family_shop_is_unavailable_after_hours():
+    character = {}
+
+    world = {
+        "hour": 20,
+    }
+
+    action = {
+        "action_type":
+            "family_duty",
+    }
+
+    result = (
+        is_self_directed_action_available(
+            character,
+            world,
+            action,
+        )
+    )
+
+    assert result == {
+        "available": False,
+        "reason":
+            "Family shop is closed",
+    }
+
+
+def test_family_social_time_is_unavailable_while_family_sleeps():
+    character = {}
+
+    world = {
+        "hour": 3,
+    }
+
+    action = {
+        "action_type":
+            "social_family",
+    }
+
+    result = (
+        is_self_directed_action_available(
+            character,
+            world,
+            action,
+        )
+    )
+
+    assert result == {
+        "available": False,
+        "reason":
+            "Family is likely sleeping",
+    }
+
+
+def test_other_actions_are_available_by_default():
+    character = {}
+
+    world = {
+        "hour": 3,
+    }
+
+    action = {
+        "action_type":
+            "eat",
+    }
+
+    result = (
+        is_self_directed_action_available(
+            character,
+            world,
+            action,
+        )
+    )
+
+    assert result == {
+        "available": True,
+        "reason": None,
     }
