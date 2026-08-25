@@ -151,3 +151,95 @@ Sleep currently spans multiple subsystems and should remain separated during mig
 
 These components should be migrated and tested independently rather than
 combined into one sleep function.
+
+## Autonomous Decision System Improvements
+
+The autonomous decision system has been migrated from the original prototype
+into modular, independently tested components.
+
+Current decision layers include:
+
+- Need urgency and need pressure
+- Special sleep pressure
+- Activity preference
+- Recent repetition / satiation
+- Time-of-day context
+- Value relevance and value-based motivation
+- Goal relevance
+- Ambition and discipline
+- Risk / rule-obedience hesitation
+- Candidate action generation
+- Action availability filtering
+- Ranked self-directed action selection
+
+### Architectural improvements
+
+The prototype handled most autonomous decision logic inside a large scoring
+function. Aevum now separates that behavior into focused functions so each
+cognitive influence can be tested and tuned independently.
+
+Examples include:
+
+- `calculate_need_pressure()`
+- `calculate_sleep_pressure()`
+- `calculate_repetition_effect()`
+- `calculate_time_of_day_effect()`
+- `calculate_value_effect()`
+- `calculate_goal_effect()`
+- `calculate_risk_effect()`
+- `generate_self_directed_actions()`
+- `is_self_directed_action_available()`
+- `score_self_directed_action()`
+- `choose_self_directed_action()`
+
+### Important system boundaries
+
+**Desirability is not availability.**
+
+An action may receive a poor score because the character does not want to
+perform it, while availability determines whether the action can currently be
+considered at all.
+
+For example:
+
+- `"Shop is likely closed"` can influence time-of-day desirability.
+- `"Family shop is closed"` makes the action unavailable.
+
+**Intention is not outcome.**
+
+The autonomous decision system produces a character intention. It does not
+decide canonical reality or directly mutate world state.
+
+The intended architecture is:
+
+Character state
+→ generate possible actions
+→ filter unavailable actions
+→ score available actions
+→ choose intention
+→ Axiom resolves the attempted action
+→ canonical world event
+→ character perception and cognition
+
+### Migration improvements to revisit later
+
+- Candidate actions are currently a fixed baseline catalog.
+- Availability rules are currently simple and mostly time-based.
+- Value and goal relevance use prototype-era linear scaling.
+- Sleep thresholds and urgency curves may need tuning for longer simulations.
+- Recent-action history currently keeps a short rolling window.
+- Decision tie-breaking is currently deterministic through score ordering.
+- Future action generation should become more contextual and world-aware.
+- Availability should eventually use richer authoritative world state rather
+  than only local decision-layer conditions.
+
+  ### Decision result schema
+
+Scored actions intentionally preserve both:
+
+- `action` — human-readable action name
+- `action_type` — structured action category
+- `action_data` — full candidate action definition
+
+This avoids duplicate dictionary keys and preserves both display information
+and structured action metadata for downstream Axiom resolution.
