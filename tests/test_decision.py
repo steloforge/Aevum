@@ -1582,3 +1582,80 @@ def test_low_rule_obedience_reduces_risk_hesitation():
         result["total_effect"]
         == -0.6
     )
+
+def test_training_score_includes_risk_hesitation():
+    character = {
+        "needs": {
+            "training_drive": 100,
+        },
+
+        "activity_preferences": {
+            "train": 50,
+        },
+
+        "recent_actions": [],
+
+        "values": {},
+
+        "traits": {
+            "ambition": 80,
+            "rule_obedience": 80,
+        },
+
+        "skills": {
+            "discipline": 60,
+        },
+    }
+
+    world = {
+        "day": 4,
+        "hour": 21,
+    }
+
+    action = {
+        "name":
+            "Practice knight techniques in secret",
+
+        "action_type":
+            "train",
+
+        "tags": [
+            "ambition",
+            "discipline",
+            "risk",
+        ],
+
+        "satisfies": {},
+    }
+
+    result = (
+        score_self_directed_action(
+            character,
+            world,
+            action,
+        )
+    )
+
+    # Time:
+    # +3
+    #
+    # Goal effect:
+    # ambition = +6.4
+    # discipline = +3.0
+    #
+    # Risk:
+    # rule obedience 80 * .03 = -2.4
+    #
+    # Total:
+    # 3 + 6.4 + 3.0 - 2.4
+    # = 10.0
+
+    assert (
+        result["score"]
+        == 10.0
+    )
+
+    assert (
+        "Rule-risk hesitation: -2.4"
+        in result["reasons"]
+    )
