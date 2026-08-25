@@ -1048,6 +1048,72 @@ def generate_self_directed_actions(
     return actions
 
 # ============================================================
+# SELF-DIRECTED ACTION AVAILABILITY
+# ============================================================
+
+
+def is_self_directed_action_available(
+    character,
+    world,
+    action,
+):
+    """
+    Determine whether a self-directed action is currently
+    available to the character.
+
+    This is separate from action scoring:
+    an action may be desirable but still unavailable.
+    """
+
+    action_type = action[
+        "action_type"
+    ]
+
+    hour = world[
+        "hour"
+    ]
+
+    # ========================================================
+    # FAMILY SHOP
+    # ========================================================
+
+    if action_type == "family_duty":
+
+        if not (
+            8 <= hour < 18
+        ):
+            return {
+                "available": False,
+                "reason":
+                    "Family shop is closed",
+            }
+
+    # ========================================================
+    # FAMILY SOCIAL TIME
+    # ========================================================
+
+    if (
+        action_type
+        == "social_family"
+    ):
+
+        if (
+            0 <= hour < 6
+        ):
+            return {
+                "available": False,
+                "reason":
+                    "Family is likely sleeping",
+            }
+
+    return {
+        "available": True,
+        "reason": None,
+    }
+
+
+
+# ============================================================
 # SELF-DIRECTED ACTION SCORING
 # ============================================================
 
