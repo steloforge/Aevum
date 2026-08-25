@@ -872,6 +872,61 @@ def calculate_goal_effect(
 
 
 # ============================================================
+# RISK HESITATION
+# ============================================================
+
+
+def calculate_risk_effect(
+    character,
+    action,
+):
+    """
+    Calculate hesitation toward risky autonomous actions.
+
+    Characters with stronger rule obedience are more
+    reluctant to choose actions explicitly tagged as risky.
+    """
+
+    tags = action.get(
+        "tags",
+        [],
+    )
+
+    if "risk" not in tags:
+        return {
+            "risk_penalty": 0,
+            "total_effect": 0,
+        }
+
+    rule_obedience = character.get(
+        "traits",
+        {},
+    ).get(
+        "rule_obedience",
+        0,
+    )
+
+    risk_penalty = (
+        rule_obedience
+        * 0.03
+    )
+
+    return {
+        "risk_penalty":
+            round(
+                risk_penalty,
+                2,
+            ),
+
+        "total_effect":
+            round(
+                -risk_penalty,
+                2,
+            ),
+    }
+
+
+# ============================================================
 # SELF-DIRECTED ACTION SCORING
 # ============================================================
 
