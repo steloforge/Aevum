@@ -2016,3 +2016,66 @@ def test_scored_actions_are_ranked_highest_first():
             "scored_actions"
         ][0]
     )
+
+def test_scored_action_preserves_name_and_action_data():
+    character = {
+        "needs": {
+            "hunger": 20,
+        },
+
+        "activity_preferences": {
+            "eat": 50,
+        },
+
+        "recent_actions": [],
+
+        "values": {},
+
+        "traits": {},
+
+        "skills": {},
+    }
+
+    world = {
+        "day": 1,
+        "hour": 10,
+    }
+
+    action = {
+        "name":
+            "Eat a meal",
+
+        "action_type":
+            "eat",
+
+        "tags": [
+            "self_care",
+        ],
+
+        "satisfies": {
+            "hunger": 45,
+        },
+    }
+
+    result = (
+        score_self_directed_action(
+            character,
+            world,
+            action,
+        )
+    )
+
+    assert (
+        result["action"]
+        == "Eat a meal"
+    )
+
+    assert (
+        result["action_type"]
+        == "eat"
+    )
+
+    assert (
+        result["action_data"]
+        == action
+    )
