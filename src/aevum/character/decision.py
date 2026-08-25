@@ -740,6 +740,132 @@ def calculate_value_effect(
 
 
 # ============================================================
+# GOAL RELEVANCE
+# ============================================================
+
+
+def calculate_goal_relevance(
+    character,
+    action_type,
+):
+    """
+    Calculate how relevant long-term goal motivation is
+    to the current action.
+
+    Training motivation scales with the character's current
+    training drive rather than always applying ambition and
+    discipline at full strength.
+    """
+
+    if action_type != "train":
+        return 1.0
+
+    needs = character.get(
+        "needs",
+        {},
+    )
+
+    training_drive = needs.get(
+        "training_drive",
+        0,
+    )
+
+    relevance = (
+        0.25
+        + (training_drive / 100) * 0.75
+    )
+
+    return round(
+        relevance,
+        3,
+    )
+
+
+# ============================================================
+# GOAL EFFECT
+# ============================================================
+
+
+def calculate_goal_effect(
+    character,
+    action,
+):
+    """
+    Calculate the long-term goal contribution to an
+    autonomous action's score.
+    """
+
+    action_type = action.get(
+        "action_type"
+    )
+
+    goal_relevance = (
+        calculate_goal_relevance(
+            character,
+            action_type,
+        )
+    )
+
+    ambition_bonus = 0
+    discipline_bonus = 0
+
+    if action_type == "train":
+
+        ambition = character.get(
+            "ambition",
+            0,
+        )
+
+        discipline = character.get(
+            "discipline",
+            0,
+        )
+
+        ambition_bonus = (
+            ambition
+            * 0.08
+            * goal_relevance
+        )
+
+        discipline_bonus = (
+            discipline
+            * 0.05
+            * goal_relevance
+        )
+
+    total_effect = (
+        ambition_bonus
+        + discipline_bonus
+    )
+
+    return {
+        "goal_relevance":
+            round(
+                goal_relevance,
+                3,
+            ),
+
+        "ambition_bonus":
+            round(
+                ambition_bonus,
+                2,
+            ),
+
+        "discipline_bonus":
+            round(
+                discipline_bonus,
+                2,
+            ),
+
+        "total_effect":
+            round(
+                total_effect,
+                2,
+            ),
+    }
+
+
+# ============================================================
 # SELF-DIRECTED ACTION SCORING
 # ============================================================
 
