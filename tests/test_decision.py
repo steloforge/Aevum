@@ -1659,3 +1659,49 @@ def test_training_score_includes_risk_hesitation():
         "Rule-risk hesitation: -2.4"
         in result["reasons"]
     )
+
+def test_generate_self_directed_actions():
+    character = {}
+
+    actions = (
+        generate_self_directed_actions(
+            character,
+        )
+    )
+
+    assert len(actions) == 6
+
+    action_types = [
+        action["action_type"]
+        for action in actions
+    ]
+
+    assert action_types == [
+        "eat",
+        "rest",
+        "sleep",
+        "family_duty",
+        "train",
+        "social_family",
+    ]
+
+    training = next(
+        action
+        for action in actions
+        if action["action_type"]
+        == "train"
+    )
+
+    assert training["name"] == (
+        "Practice knight techniques in secret"
+    )
+
+    assert training["tags"] == [
+        "ambition",
+        "discipline",
+        "risk",
+    ]
+
+    assert training["satisfies"] == {
+        "training_drive": 40,
+    }
