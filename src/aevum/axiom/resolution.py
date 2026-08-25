@@ -67,7 +67,7 @@ def resolve_action_outcome(
         f"Location: {location}"
     )
 
- # ========================================================
+     # ========================================================
     # 1. WORLD LAW CHECK
     # ========================================================
 
@@ -411,6 +411,73 @@ def resolve_action_outcome(
                 "for this action type."
             ),
     }
+
+def resolve_self_directed_action(
+    world,
+    character,
+    chosen_action,
+):
+    """
+    Resolve a self-directed character intention through
+    authoritative Axiom world rules.
+
+    Self-directed actions originate from the character's
+    internal state rather than from a triggering world event.
+
+    This function determines what actually occurs.
+    """
+
+    action_name = chosen_action[
+        "action"
+    ]
+
+    action_type = chosen_action[
+        "action_type"
+    ]
+
+    action_data = chosen_action.get(
+        "action_data",
+        {},
+    )
+
+    print(
+        "\n--- SELF-DIRECTED ACTION RESOLUTION ---"
+    )
+
+    print(
+        f"Character: "
+        f"{character['name']}"
+    )
+
+    print(
+        f"Action: {action_name}"
+    )
+
+    print(
+        f"Action Type: "
+        f"{action_type}"
+    )
+
+    return {
+        "status":
+            "unresolved",
+
+        "action":
+            action_name,
+
+        "action_type":
+            action_type,
+
+        "action_data":
+            action_data,
+
+        "reason":
+            (
+                "No self-directed Axiom resolution "
+                "rule exists for this action type."
+            ),
+    }
+
 
 
 def create_outcome_event(
