@@ -133,6 +133,7 @@ World Event
 Relationship changes should remain subjective consequences of a character's
 experience rather than authoritative properties of Axiom's world event.
 
+
 Before integration, verify how emotional causes should map to specific
 participants so abstract causes such as "Community Support" or "Family" do
 not accidentally become relationship targets.
