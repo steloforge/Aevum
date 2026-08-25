@@ -13,6 +13,7 @@ from aevum.character.decision import (
     calculate_risk_effect,
     generate_self_directed_actions,
     is_self_directed_action_available,
+    choose_self_directed_action,
 )
 
 
@@ -1812,3 +1813,206 @@ def test_other_actions_are_available_by_default():
         "available": True,
         "reason": None,
     }
+
+def test_choose_self_directed_action_returns_highest_score():
+    character = {
+        "needs": {
+            "hunger": 100,
+            "fatigue": 0,
+            "social": 0,
+            "family_responsibility": 0,
+            "training_drive": 0,
+        },
+
+        "activity_preferences": {
+            "eat": 50,
+            "rest": 50,
+            "sleep": 50,
+            "family_duty": 50,
+            "train": 50,
+            "social_family": 50,
+        },
+
+        "recent_actions": [],
+
+        "values": {
+            "family": 0,
+            "community": 0,
+            "personal_honor": 0,
+        },
+
+        "traits": {
+            "ambition": 0,
+            "rule_obedience": 0,
+        },
+
+        "skills": {
+            "discipline": 0,
+        },
+    }
+
+    world = {
+        "day": 1,
+        "hour": 10,
+    }
+
+    result = (
+        choose_self_directed_action(
+            character,
+            world,
+        )
+    )
+
+    assert (
+        result[
+            "chosen_action"
+        ][
+            "action_type"
+        ]
+        == "eat"
+    )
+
+
+def test_choose_self_directed_action_excludes_unavailable_actions():
+    character = {
+        "needs": {
+            "hunger": 0,
+            "fatigue": 0,
+            "social": 0,
+            "family_responsibility": 100,
+            "training_drive": 0,
+        },
+
+        "activity_preferences": {
+            "eat": 50,
+            "rest": 50,
+            "sleep": 50,
+            "family_duty": 100,
+            "train": 50,
+            "social_family": 50,
+        },
+
+        "recent_actions": [],
+
+        "values": {
+            "family": 100,
+            "community": 100,
+            "personal_honor": 100,
+        },
+
+        "traits": {
+            "ambition": 0,
+            "rule_obedience": 0,
+        },
+
+        "skills": {
+            "discipline": 0,
+        },
+    }
+
+    world = {
+        "day": 1,
+        "hour": 22,
+    }
+
+    result = (
+        choose_self_directed_action(
+            character,
+            world,
+        )
+    )
+
+    unavailable_types = [
+        item["action_type"]
+        for item in result[
+            "unavailable_actions"
+        ]
+    ]
+
+    scored_types = [
+        item["action_type"]
+        for item in result[
+            "scored_actions"
+        ]
+    ]
+
+    assert (
+        "family_duty"
+        in unavailable_types
+    )
+
+    assert (
+        "family_duty"
+        not in scored_types
+    )
+
+
+def test_scored_actions_are_ranked_highest_first():
+    character = {
+        "needs": {
+            "hunger": 80,
+            "fatigue": 20,
+            "social": 10,
+            "family_responsibility": 10,
+            "training_drive": 10,
+        },
+
+        "activity_preferences": {
+            "eat": 50,
+            "rest": 50,
+            "sleep": 50,
+            "family_duty": 50,
+            "train": 50,
+            "social_family": 50,
+        },
+
+        "recent_actions": [],
+
+        "values": {
+            "family": 50,
+            "community": 50,
+            "personal_honor": 50,
+        },
+
+        "traits": {
+            "ambition": 50,
+            "rule_obedience": 50,
+        },
+
+        "skills": {
+            "discipline": 50,
+        },
+    }
+
+    world = {
+        "day": 1,
+        "hour": 10,
+    }
+
+    result = (
+        choose_self_directed_action(
+            character,
+            world,
+        )
+    )
+
+    scores = [
+        item["score"]
+        for item in result[
+            "scored_actions"
+        ]
+    ]
+
+    assert scores == sorted(
+        scores,
+        reverse=True,
+    )
+
+    assert (
+        result[
+            "chosen_action"
+        ]
+        == result[
+            "scored_actions"
+        ][0]
+    )
