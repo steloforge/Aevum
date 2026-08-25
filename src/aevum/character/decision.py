@@ -927,6 +927,127 @@ def calculate_risk_effect(
 
 
 # ============================================================
+# Generate self directed actions
+# ============================================================
+
+def generate_self_directed_actions(
+    character,
+):
+    """
+    Generate the character's baseline self-directed
+    action candidates.
+
+    This function defines possible intentions.
+    Availability is checked separately.
+    """
+
+    actions = [
+        {
+            "name":
+                "Eat a meal",
+
+            "action_type":
+                "eat",
+
+            "tags": [
+                "self_care",
+            ],
+
+            "satisfies": {
+                "hunger": 45,
+            },
+        },
+
+        {
+            "name":
+                "Rest for a while",
+
+            "action_type":
+                "rest",
+
+            "tags": [
+                "self_care",
+            ],
+
+            "satisfies": {
+                "fatigue": 18,
+            },
+        },
+
+        {
+            "name":
+                "Go to sleep",
+
+            "action_type":
+                "sleep",
+
+            "tags": [
+                "self_care",
+                "sleep",
+            ],
+
+            "satisfies": {},
+        },
+
+        {
+            "name":
+                "Help at the family shop",
+
+            "action_type":
+                "family_duty",
+
+            "tags": [
+                "family",
+                "community",
+                "honor",
+            ],
+
+            "satisfies": {
+                "family_responsibility": 35,
+                "social": 10,
+            },
+        },
+
+        {
+            "name":
+                "Practice knight techniques in secret",
+
+            "action_type":
+                "train",
+
+            "tags": [
+                "ambition",
+                "discipline",
+                "risk",
+            ],
+
+            "satisfies": {
+                "training_drive": 40,
+            },
+        },
+
+        {
+            "name":
+                "Spend time with family",
+
+            "action_type":
+                "social_family",
+
+            "tags": [
+                "family",
+                "social",
+            ],
+
+            "satisfies": {
+                "social": 30,
+                "family_responsibility": 15,
+            },
+        },
+    ]
+
+    return actions
+
+# ============================================================
 # SELF-DIRECTED ACTION SCORING
 # ============================================================
 
