@@ -216,3 +216,25 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ============================================================
+# Aevum runtime data
+# ============================================================
+
+# Persistent simulation saves
+saves/
+save_data/
+*_save.json
+
+# Development world state
+zahsego_save.json
+aevum_save.json
+
+# Runtime logs
+logs/
+*.log
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
