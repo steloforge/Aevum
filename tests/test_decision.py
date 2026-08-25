@@ -719,3 +719,170 @@ def test_record_recent_action_removes_old_history():
         ][0]["action_type"]
         == "eat"
     )
+
+def score_self_directed_action(
+    character,
+    world,
+    action,
+):
+    """
+    Score a self-directed action from the character's
+    current subjective motivations.
+
+    This is currently a partial scorer containing:
+
+    - need pressure
+    - special sleep pressure
+    - activity preference
+    - recent repetition
+    - time-of-day context
+
+    Values, goals, traits, and risk will be layered in
+    separately.
+    """
+
+    score = 0
+    reasons = []
+
+    # ========================================================
+    # 1. NEED PRESSURE
+    # ========================================================
+
+    need_effect = calculate_need_pressure(
+        character,
+        action,
+    )
+
+    score += need_effect[
+        "score"
+    ]
+
+    reasons.extend(
+        need_effect[
+            "reasons"
+        ]
+    )
+
+    # ========================================================
+    # 2. SLEEP FATIGUE PRESSURE
+    # ========================================================
+
+    sleep_effect = (
+        calculate_sleep_pressure(
+            character,
+            action,
+        )
+    )
+
+    score += sleep_effect[
+        "score"
+    ]
+
+    reasons.extend(
+        sleep_effect[
+            "reasons"
+        ]
+    )
+
+    # ========================================================
+    # 3. PERSONAL PREFERENCE / REPETITION
+    # ========================================================
+
+    preference_effect = (
+        calculate_repetition_effect(
+            character,
+            world,
+            action[
+                "action_type"
+            ],
+        )
+    )
+
+    score += preference_effect[
+        "net_effect"
+    ]
+
+    preference_bonus = (
+        preference_effect[
+            "preference_bonus"
+        ]
+    )
+
+    if preference_bonus >= 0:
+        reasons.append(
+            "Activity preference: "
+            f"+{preference_bonus}"
+        )
+
+    else:
+        reasons.append(
+            "Activity preference: "
+            f"{preference_bonus}"
+        )
+
+    if (
+        preference_effect[
+            "repetition_penalty"
+        ]
+        > 0
+    ):
+        reasons.append(
+            "Recent repetition: "
+            f"-{preference_effect['repetition_penalty']}"
+        )
+
+    # ========================================================
+    # 4. TIME OF DAY
+    # ========================================================
+
+    time_effect = (
+        calculate_time_of_day_effect(
+            world,
+            action[
+                "action_type"
+            ],
+        )
+    )
+
+    score += time_effect[
+        "effect"
+    ]
+
+    if (
+        time_effect["effect"]
+        != 0
+    ):
+        sign = (
+            "+"
+            if (
+                time_effect["effect"]
+                > 0
+            )
+            else ""
+        )
+
+        reasons.append(
+            f"Time of day "
+            f"({time_effect['period']}): "
+            f"{sign}{time_effect['effect']} "
+            f"- {time_effect['reason']}"
+        )
+
+    return {
+        "action":
+            action["name"],
+
+        "action_type":
+            action[
+                "action_type"
+            ],
+
+        "score":
+            round(
+                score,
+                2,
+            ),
+
+        "reasons":
+            reasons,
+    }
