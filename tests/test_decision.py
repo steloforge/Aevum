@@ -5,6 +5,7 @@ from aevum.character.decision import (
     calculate_sleep_pressure,
     calculate_time_of_day_effect,
     record_recent_action,
+    score_self_directed_action,
 )
 
 
