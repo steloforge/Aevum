@@ -8,6 +8,8 @@ from aevum.character.decision import (
     score_self_directed_action,
     calculate_value_relevance,
     calculate_value_effect,
+    calculate_goal_effect,
+    calculate_goal_relevance,
 )
 
 
@@ -1226,4 +1228,111 @@ def test_low_family_pressure_reduces_value_influence():
     assert (
         "Current value relevance: x0.25"
         in result["reasons"]
+    )
+
+def test_training_goal_relevance_starts_at_quarter_strength():
+    character = {
+        "needs": {
+            "training_drive": 0,
+        },
+    }
+
+    result = (
+        calculate_goal_relevance(
+            character,
+            "train",
+        )
+    )
+
+    assert result == 0.25
+
+
+def test_training_goal_relevance_reaches_full_strength():
+    character = {
+        "needs": {
+            "training_drive": 100,
+        },
+    }
+
+    result = (
+        calculate_goal_relevance(
+            character,
+            "train",
+        )
+    )
+
+    assert result == 1.0
+
+
+def test_non_training_action_has_full_goal_relevance():
+    character = {
+        "needs": {
+            "training_drive": 0,
+        },
+    }
+
+    result = (
+        calculate_goal_relevance(
+            character,
+            "eat",
+        )
+    )
+
+    assert result == 1.0
+
+
+def test_training_goal_effect_uses_ambition_and_discipline():
+    character = {
+        "needs": {
+            "training_drive": 100,
+        },
+
+        "ambition": 80,
+        "discipline": 60,
+    }
+
+    action = {
+        "name":
+            "Train in secret",
+
+        "action_type":
+            "train",
+    }
+
+    result = (
+        calculate_goal_effect(
+            character,
+            action,
+        )
+    )
+
+    # Full goal relevance = 1.0
+    #
+    # Ambition:
+    # 80 * 0.08 = 6.4
+    #
+    # Discipline:
+    # 60 * 0.05 = 3.0
+    #
+    # Total:
+    # 9.4
+
+    assert (
+        result["goal_relevance"]
+        == 1.0
+    )
+
+    assert (
+        result["ambition_bonus"]
+        == 6.4
+    )
+
+    assert (
+        result["discipline_bonus"]
+        == 3.0
+    )
+
+    assert (
+        result["total_effect"]
+        == 9.4
     )
