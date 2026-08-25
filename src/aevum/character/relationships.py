@@ -26,24 +26,63 @@ def update_relationship_from_memory(
     character,
     memory,
 ):
+    """
+    Apply the interpersonal consequences of a lived memory.
+
+    Relationship effects are applied only once per memory.
+
+    Every non-self participant gains familiarity because the
+    character shared an experience with them.
+
+    Trust, affection, respect, and fear change only when that
+    specific participant is identified as the cause of the
+    corresponding emotion.
+    """
+
+    # Prevent sleep consolidation, repeated processing, or
+    # accidental duplicate calls from applying the same social
+    # consequences more than once.
+    if memory.get(
+        "relationship_effects_applied",
+        False,
+    ):
+        return []
+
+    if "relationships" not in character:
+        character["relationships"] = {}
+
     emotion_causes = memory.get(
         "emotion_causes",
         {},
     )
 
-    for person in memory["people"]:
+    emotions = memory.get(
+        "emotions",
+        {},
+    )
+
+    updated_people = []
+
+    for person in memory.get(
+        "people",
+        [],
+    ):
 
         if person == character["name"]:
             continue
 
-        relationship = get_or_create_relationship(
-            character,
-            person,
+        relationship = (
+            get_or_create_relationship(
+                character,
+                person,
+            )
         )
 
-        relationship["familiarity"] += 5
-
-        emotions = memory["emotions"]
+        # Sharing an experience increases familiarity,
+        # regardless of whether the person caused an emotion.
+        relationship[
+            "familiarity"
+        ] += 5
 
         happiness = emotions.get(
             "happiness",
@@ -70,36 +109,50 @@ def update_relationship_from_memory(
             0,
         )
 
+        # Only a real participant can receive interpersonal
+        # consequences from an emotional cause.
         if (
-            emotion_causes.get("happiness")
+            emotion_causes.get(
+                "happiness"
+            )
             == person
         ):
             relationship["trust"] += (
                 happiness * 0.05
             )
 
-            relationship["affection"] += (
+            relationship[
+                "affection"
+            ] += (
                 happiness * 0.04
             )
 
-            relationship["respect"] += (
+            relationship[
+                "respect"
+            ] += (
                 happiness * 0.03
             )
 
         if (
-            emotion_causes.get("anger")
+            emotion_causes.get(
+                "anger"
+            )
             == person
         ):
             relationship["trust"] -= (
                 anger * 0.04
             )
 
-            relationship["affection"] -= (
+            relationship[
+                "affection"
+            ] -= (
                 anger * 0.03
             )
 
         if (
-            emotion_causes.get("fear")
+            emotion_causes.get(
+                "fear"
+            )
             == person
         ):
             relationship["fear"] += (
@@ -111,18 +164,26 @@ def update_relationship_from_memory(
             )
 
         if (
-            emotion_causes.get("guilt")
+            emotion_causes.get(
+                "guilt"
+            )
             == person
         ):
-            relationship["affection"] += (
+            relationship[
+                "affection"
+            ] += (
                 guilt * 0.01
             )
 
         if (
-            emotion_causes.get("sadness")
+            emotion_causes.get(
+                "sadness"
+            )
             == person
         ):
-            relationship["affection"] += (
+            relationship[
+                "affection"
+            ] += (
                 sadness * 0.01
             )
 
@@ -138,10 +199,21 @@ def update_relationship_from_memory(
                 2,
             )
 
+        updated_people.append(
+            person
+        )
+
         print(
             f"Relationship updated: {person}"
         )
 
+    # This memory's interpersonal consequences have now
+    # entered character state.
+    memory[
+        "relationship_effects_applied"
+    ] = True
+
+    return updated_people
 
 def interpret_relationship(
     character,
