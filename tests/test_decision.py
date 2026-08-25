@@ -6,6 +6,8 @@ from aevum.character.decision import (
     calculate_time_of_day_effect,
     record_recent_action,
     score_self_directed_action,
+    calculate_value_relevance,
+    calucate_value_effect,
 )
 
 
@@ -981,3 +983,100 @@ def test_recent_full_sleep_can_outweigh_morning_sleep_desire():
         "Recent repetition: -10.0"
         in result["reasons"]
     )
+
+def test_family_duty_value_relevance_scales_with_responsibility():
+    character = {
+        "needs": {
+            "family_responsibility": 0,
+        },
+    }
+
+    result = calculate_value_relevance(
+        character,
+        "family_duty",
+    )
+
+    assert result == 0.25
+
+
+def test_family_duty_value_relevance_reaches_full_strength():
+    character = {
+        "needs": {
+            "family_responsibility": 100,
+        },
+    }
+
+    result = calculate_value_relevance(
+        character,
+        "family_duty",
+    )
+
+    assert result == 1.0
+
+
+def test_non_family_duty_values_have_full_relevance():
+    character = {
+        "needs": {
+            "family_responsibility": 0,
+        },
+    }
+
+    result = calculate_value_relevance(
+        character,
+        "social_family",
+    )
+
+    assert result == 1.0
+
+
+def test_family_duty_value_effect_combines_relevant_values():
+    character = {
+        "needs": {
+            "family_responsibility": 100,
+        },
+
+        "values": {
+            "family": 80,
+            "community": 60,
+            "personal_honor": 70,
+        },
+    }
+
+    action = {
+        "name":
+            "Help at the family shop",
+
+        "action_type":
+            "family_duty",
+
+        "tags": [
+            "family",
+            "community",
+            "honor",
+        ],
+    }
+
+    result = calculate_value_effect(
+        character,
+        action,
+    )
+
+    assert result[
+        "value_relevance"
+    ] == 1.0
+
+    assert result[
+        "family_bonus"
+    ] == 6.4
+
+    assert result[
+        "community_bonus"
+    ] == 3.0
+
+    assert result[
+        "honor_bonus"
+    ] == 3.5
+
+    assert result[
+        "total_effect"
+    ] == 12.9
