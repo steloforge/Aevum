@@ -1420,7 +1420,7 @@ def score_self_directed_action(
         "reasons":
             reasons,
 
-        "action":
+        "action_data":
             action,
     }
 
