@@ -643,16 +643,23 @@ def test_decay_can_move_memory_to_deeper_layer():
 
     memory["last_recalled_day"] = 1
 
+    # Only a few days pass.
+    #
+    # This should weaken the memory enough
+    # to cross from accessible into faded,
+    # without pushing it all the way into
+    # buried memory.
     decay_memories(
         character=character,
         world={
-            "day": 40,
+            "day": 5,
             "hour": 8,
         },
         daily_decay=1,
     )
 
     assert memory["clarity"] < 50
+    assert memory["clarity"] >= 25
 
     assert (
         memory["memory_layer"]
