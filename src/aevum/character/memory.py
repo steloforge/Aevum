@@ -93,6 +93,101 @@ def create_memory(
 
 
 # ============================================================
+# Create Memory From Event
+# ============================================================
+
+def create_memory_from_event(
+    character,
+    world,
+    perception,
+    interpretation,
+):
+    associations = []
+
+    associations.append(
+        perception["location"].lower()
+    )
+
+    for person in perception["participants"]:
+        if person != character["name"]:
+            associations.append(
+                person.lower()
+            )
+
+    details = perception["known_details"]
+
+    for key, value in details.items():
+        if isinstance(value, str):
+            associations.append(
+                value.lower()
+            )
+
+        elif (
+            isinstance(value, bool)
+            and value
+        ):
+            associations.append(
+                key.replace(
+                    "_",
+                    " ",
+                ).lower()
+            )
+
+    # Preserve order while removing duplicates.
+    associations = list(
+        dict.fromkeys(
+            associations
+        )
+    )
+
+    return create_memory(
+        character=character,
+        world=world,
+        description=(
+            perception[
+                "perceived_description"
+            ]
+        ),
+        interpretation=(
+            interpretation[
+                "interpretation"
+            ]
+        ),
+        people=(
+            perception[
+                "participants"
+            ]
+        ),
+        location=(
+            perception[
+                "location"
+            ]
+        ),
+        associations=associations,
+        emotions=(
+            interpretation[
+                "emotions"
+            ]
+        ),
+        emotion_causes=(
+            interpretation[
+                "emotion_causes"
+            ]
+        ),
+        importance=(
+            interpretation[
+                "importance"
+            ]
+        ),
+        confidence=(
+            interpretation[
+                "confidence"
+            ]
+        ),
+        clarity=95,
+    )
+
+# ============================================================
 # MEMORY DISPLAY
 # ============================================================
 
