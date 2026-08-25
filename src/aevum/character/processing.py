@@ -5,6 +5,17 @@ This module coordinates the cognitive systems that transform
 authoritative Axiom world events into subjective character state.
 """
 
+from aevum.character.relationships import (
+    update_relationship_from_memory,
+)
+
+memory = create_memory_from_event(
+    character,
+    world,
+    perception,
+    interpretation,
+)
+
 from aevum.character.beliefs import (
     apply_belief_judgment,
     infer_belief_relevance,
@@ -150,7 +161,18 @@ def process_outcome_for_character(
     )
 
     # --------------------------------------------------------
-    # 5. SELF-CONCEPT
+    # 5. RELATIONSHIPS
+    # --------------------------------------------------------
+
+    relationship_updates = (
+        update_relationship_from_memory(
+            character,
+            memory,
+        )
+    )
+    
+    # --------------------------------------------------------
+    # 6. SELF-CONCEPT
     # --------------------------------------------------------
 
     self_concept = update_self_concept(
@@ -160,7 +182,7 @@ def process_outcome_for_character(
     )
 
     # --------------------------------------------------------
-    # 6. BELIEFS
+    # 7. BELIEFS
     # --------------------------------------------------------
 
     belief_matches = (
@@ -193,7 +215,7 @@ def process_outcome_for_character(
         )
 
     # --------------------------------------------------------
-    # 7. AUTOSAVE
+    # 8. AUTOSAVE
     # --------------------------------------------------------
 
     if (
@@ -239,4 +261,7 @@ def process_outcome_for_character(
 
         "belief_judgments":
             belief_judgments,
+               
+        "relationship_updates":
+            relationship_updates,
     }
