@@ -15,6 +15,10 @@ from aevum.axiom.events import (
     create_world_event,
 )
 
+from aevum.world.time import (
+    advance_time,
+)
+
 def resolve_action_outcome(
     world,
     character,
@@ -412,6 +416,81 @@ def resolve_action_outcome(
             ),
     }
 
+# ============================================================
+# AWAKE NEED DRIFT
+# ============================================================
+
+
+def apply_awake_need_drift(
+    character,
+    hours_passed,
+):
+    """
+    Apply normal need changes while a character is awake.
+
+    This represents the passage-of-time cost that occurs
+    alongside ordinary waking actions.
+    """
+
+    needs = character[
+        "needs"
+    ]
+
+    needs["hunger"] = (
+        needs.get(
+            "hunger",
+            0,
+        )
+        + 2.0 * hours_passed
+    )
+
+    needs["fatigue"] = (
+        needs.get(
+            "fatigue",
+            0,
+        )
+        + 1.5 * hours_passed
+    )
+
+    needs["social"] = (
+        needs.get(
+            "social",
+            0,
+        )
+        + 0.3 * hours_passed
+    )
+
+    needs["family_responsibility"] = (
+        needs.get(
+            "family_responsibility",
+            0,
+        )
+        + 0.4 * hours_passed
+    )
+
+    needs["training_drive"] = (
+        needs.get(
+            "training_drive",
+            0,
+        )
+        + 0.5 * hours_passed
+    )
+
+    for need_name in needs:
+
+        needs[need_name] = round(
+            min(
+                max(
+                    needs[need_name],
+                    0,
+                ),
+                100,
+            ),
+            2,
+        )
+
+    return needs
+
 def resolve_self_directed_action(
     world,
     character,
@@ -457,6 +536,102 @@ def resolve_self_directed_action(
         f"Action Type: "
         f"{action_type}"
     )
+
+    # ========================================================
+    # 1. EAT
+    # ========================================================
+
+    if action_type == "eat":
+
+        duration_hours = 1
+
+        satisfies = action_data.get(
+            "satisfies",
+            {},
+        )
+
+        hunger_reduction = (
+            satisfies.get(
+                "hunger",
+                45,
+            )
+        )
+
+        # ----------------------------------------------------
+        # SATISFY HUNGER
+        # ----------------------------------------------------
+
+        current_hunger = (
+            character[
+                "needs"
+            ].get(
+                "hunger",
+                0,
+            )
+        )
+
+        character[
+            "needs"
+        ][
+            "hunger"
+        ] = round(
+            max(
+                current_hunger
+                - hunger_reduction,
+                0,
+            ),
+            2,
+        )
+
+        # ----------------------------------------------------
+        # TIME PASSES
+        # ----------------------------------------------------
+
+        advance_time(
+            world,
+            duration_hours,
+        )
+
+        # ----------------------------------------------------
+        # NORMAL WAKING NEED DRIFT
+        # ----------------------------------------------------
+
+        apply_awake_need_drift(
+            character,
+            duration_hours,
+        )
+
+        return {
+            "status":
+                "success",
+
+            "action":
+                action_name,
+
+            "action_type":
+                action_type,
+
+            "action_data":
+                action_data,
+
+            "duration_hours":
+                duration_hours,
+
+            "reason":
+                (
+                    f"{character['name']} "
+                    "ate a meal."
+                ),
+
+            "updated_needs":
+                character[
+                    "needs"
+                ].copy(),
+        }
+
+    # ========================================================
+    # 2. UNKNOWN SELF-DIRECTED ACTION
+    # ========================================================
 
     return {
         "status":
