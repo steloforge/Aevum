@@ -1187,6 +1187,33 @@ def score_self_directed_action(
             "Discipline: "
             f"+{goal_effect['discipline_bonus']}"
         )
+
+
+    # ========================================================
+    # 7. RISK / RULE HESITATION
+    # ========================================================
+
+    risk_effect = (
+        calculate_risk_effect(
+            character,
+            action,
+        )
+    )
+
+    score += risk_effect[
+        "total_effect"
+    ]
+
+    if (
+        risk_effect[
+            "risk_penalty"
+        ]
+        > 0
+    ):
+        reasons.append(
+            "Rule-risk hesitation: "
+            f"-{risk_effect['risk_penalty']}"
+        )
     
     return {
         "action":
