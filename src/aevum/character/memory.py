@@ -5,6 +5,9 @@ Memories retain information about experiences, emotional associations,
 importance, confidence, clarity, recall history, and accessibility.
 """
 
+from aevum.character.emotions import (
+    process_emotional_response,
+)
 
 # ============================================================
 # MEMORY LAYERS
@@ -145,6 +148,88 @@ def recall_memories(character):
 
         print()
 
+# ============================================================
+# RECALL MEMORY
+# ============================================================
+
+def recall_memory(
+    character,
+    memory_id,
+    emotional_strength=0.25,
+    clarity_boost=8,
+    world=None,
+):
+    for memory in character["memory"]:
+
+        if memory["id"] == memory_id:
+            memory["recall_count"] += 1
+
+            memory["clarity"] += clarity_boost
+            memory["clarity"] = min(
+                memory["clarity"],
+                100,
+            )
+
+            update_memory_layer(memory)
+
+            for emotion, intensity in (
+                memory["emotions"].items()
+            ):
+                if emotion in character[
+                    "current_emotions"
+                ]:
+                    effect = (
+                        intensity
+                        * emotional_strength
+                    )
+
+                    character[
+                        "current_emotions"
+                    ][emotion] += effect
+
+                    character[
+                        "current_emotions"
+                    ][emotion] = min(
+                        character[
+                            "current_emotions"
+                        ][emotion],
+                        100,
+                    )
+
+            if world is not None:
+                memory["last_recalled_day"] = (
+                    world["day"]
+                )
+
+            print(
+                f"{character['name']} recalled: "
+                f"{memory['description']}"
+            )
+
+            print(
+                "Recall strength: "
+                f"{round(emotional_strength * 100)}%"
+            )
+
+            print(
+                "Memory layer: "
+                f"{memory['memory_layer']}"
+            )
+
+            print("Current emotions:")
+
+            for emotion, value in character[
+                "current_emotions"
+            ].items():
+                print(
+                    f"  {emotion}: "
+                    f"{round(value, 2)}"
+                )
+
+            return memory
+
+    print("Memory not found.")
+    return None
 
 # ============================================================
 # LAYERED MEMORY SEARCH
@@ -244,3 +329,298 @@ def search_memory(
     )
 
     return matches
+
+
+# ============================================================
+# Recover Memory
+# ============================================================
+
+def recover_memory(
+    character,
+    world,
+    clues,
+    emotional_reactivation=0.20,
+):
+    results = search_memory(
+        character,
+        clues,
+    )
+
+    if not results:
+        print("No memory recovered.")
+        return None
+
+    best_match = results[0]
+    memory = best_match["memory"]
+
+    print(
+        f"{character['name']} recovered a memory:"
+    )
+    print(memory["description"])
+
+    memory["recall_count"] += 1
+
+    memory_age = max(
+        0,
+        world["day"]
+        - memory["created_day"],
+    )
+
+    days_since_recall = max(
+        0,
+        world["day"]
+        - memory["last_recalled_day"],
+    )
+
+    base_boost = 3
+
+    importance_bonus = (
+        memory["importance"]
+        * 0.03
+    )
+
+    clue_bonus = (
+        best_match["raw_score"]
+        * 1.5
+    )
+
+    if days_since_recall > 90:
+        resurfacing_bonus = 4
+
+    elif days_since_recall > 30:
+        resurfacing_bonus = 2
+
+    else:
+        resurfacing_bonus = 0
+
+    age_penalty = min(
+        memory_age * 0.01,
+        3,
+    )
+
+    clarity_boost = (
+        base_boost
+        + importance_bonus
+        + clue_bonus
+        + resurfacing_bonus
+        - age_penalty
+    )
+
+    clarity_boost = max(
+        1,
+        min(
+            clarity_boost,
+            15,
+        ),
+    )
+
+    memory["clarity"] += clarity_boost
+
+    memory["clarity"] = min(
+        memory["clarity"],
+        100,
+    )
+
+    memory["last_recalled_day"] = (
+        world["day"]
+    )
+
+    update_memory_layer(memory)
+
+    emotional_response = (
+        process_emotional_response(
+            character=character,
+            emotions=memory.get(
+                "emotions",
+                {},
+            ),
+            response_strength=(
+                emotional_reactivation
+            ),
+            use_regulation=True,
+            suppress_opposing_emotions=True,
+        )
+    )
+
+    print(
+        "Matched clues:",
+        best_match["matched_clues"],
+    )
+
+    print(
+        "Raw match score:",
+        best_match["raw_score"],
+    )
+
+    print(
+        "Required score:",
+        best_match["required_score"],
+    )
+
+    print(
+        "Clarity boost:",
+        round(
+            clarity_boost,
+            2,
+        ),
+    )
+
+    print(
+        "New clarity:",
+        round(
+            memory["clarity"],
+            2,
+        ),
+    )
+
+    print(
+        "Memory layer:",
+        memory["memory_layer"],
+    )
+
+    print(
+        "Recall count:",
+        memory["recall_count"],
+    )
+
+    print(
+        "Regulation factor:",
+        emotional_response[
+            "regulation_factor"
+        ],
+    )
+
+    print(
+        "Negative emotional reactivation:",
+        emotional_response[
+            "negative_activation"
+        ],
+    )
+
+    print(
+        "Happiness reduction:",
+        emotional_response[
+            "happiness_reduction"
+        ],
+    )
+
+    print("\nCurrent emotions:")
+
+    for emotion, value in character[
+        "current_emotions"
+    ].items():
+        print(
+            f"  {emotion}: {value}"
+        )
+
+    return memory
+
+# ============================================================
+# Decay Memory
+# ============================================================
+
+def decay_memories(
+    character,
+    world,
+    daily_decay=1,
+):
+    for memory in character["memory"]:
+
+        if "last_decay_day" not in memory:
+            memory["last_decay_day"] = (
+                world["day"]
+            )
+
+        if "last_recalled_day" not in memory:
+            memory["last_recalled_day"] = (
+                memory["created_day"]
+            )
+
+        if "recall_count" not in memory:
+            memory["recall_count"] = 0
+
+        days_passed = (
+            world["day"]
+            - memory["last_decay_day"]
+        )
+
+        if days_passed <= 0:
+            continue
+
+        importance_protection = (
+            memory["importance"] / 100
+        ) * 0.70
+
+        recall_strength = min(
+            memory["recall_count"],
+            20,
+        ) / 20
+
+        recall_protection = (
+            recall_strength * 0.25
+        )
+
+        days_since_recall = (
+            world["day"]
+            - memory["last_recalled_day"]
+        )
+
+        if days_since_recall <= 7:
+            recent_recall_protection = 0.15
+
+        elif days_since_recall <= 30:
+            recent_recall_protection = 0.08
+
+        else:
+            recent_recall_protection = 0
+
+        emotional_intensity = sum(
+            memory.get(
+                "emotions",
+                {},
+            ).values()
+        )
+
+        emotional_strength = min(
+            emotional_intensity / 400,
+            1,
+        )
+
+        emotional_protection = (
+            emotional_strength * 0.20
+        )
+
+        total_protection = (
+            importance_protection
+            + recall_protection
+            + recent_recall_protection
+            + emotional_protection
+        )
+
+        total_protection = min(
+            total_protection,
+            0.95,
+        )
+
+        decay_multiplier = (
+            1 - total_protection
+        )
+
+        actual_decay = (
+            daily_decay
+            * days_passed
+            * decay_multiplier
+        )
+
+        memory["clarity"] -= actual_decay
+
+        memory["clarity"] = max(
+            memory["clarity"],
+            0,
+        )
+
+        update_memory_layer(memory)
+
+        memory["last_decay_day"] = (
+            world["day"]
+        )
