@@ -3,7 +3,10 @@ from aevum.character.beliefs import (
 )
 
 from aevum.character.processing import (
+    apply_sleep_cognitive_effects,
+    consolidate_recent_memories_during_sleep,
     process_outcome_for_character,
+    recover_emotions_during_sleep,
 )
 
 from aevum.axiom.resolution import (
@@ -461,4 +464,249 @@ def test_autonomous_eating_becomes_lived_memory():
             "relationship_updates"
         ]
         == []
+    )
+
+# ============================================================
+# SLEEP COGNITION
+# ============================================================
+
+
+def test_sleep_recovers_persistent_emotions_toward_baseline():
+    character = {
+        "current_emotions": {
+            "fear": 80,
+            "anger": 60,
+            "guilt": 40,
+            "sadness": 50,
+            "stress": 70,
+            "happiness": 10,
+        },
+    }
+
+    recover_emotions_during_sleep(
+        character,
+        hours_slept=8,
+    )
+
+    # Negative emotions should move toward zero.
+
+    assert (
+        character[
+            "current_emotions"
+        ][
+            "fear"
+        ]
+        < 80
+    )
+
+    assert (
+        character[
+            "current_emotions"
+        ][
+            "anger"
+        ]
+        < 60
+    )
+
+    assert (
+        character[
+            "current_emotions"
+        ][
+            "stress"
+        ]
+        < 70
+    )
+
+    # Happiness should recover toward its
+    # baseline of 50.
+
+    assert (
+        character[
+            "current_emotions"
+        ][
+            "happiness"
+        ]
+        > 10
+    )
+
+    assert (
+        character[
+            "current_emotions"
+        ][
+            "happiness"
+        ]
+        < 50
+    )
+
+
+def test_sleep_consolidates_recent_important_memory():
+    character = {
+        "memory": [
+            {
+                "id":
+                    1,
+
+                "created_day":
+                    1,
+
+                "clarity":
+                    80,
+
+                "importance":
+                    50,
+
+                "emotions": {
+                    "fear": 20,
+                    "anger": 10,
+                },
+            },
+        ],
+    }
+
+    world = {
+        "day": 2,
+        "hour": 6,
+    }
+
+    memories_processed = (
+        consolidate_recent_memories_during_sleep(
+            character,
+            world,
+        )
+    )
+
+    memory = character[
+        "memory"
+    ][0]
+
+    # Importance:
+    # 50 * .03 = 1.5
+    #
+    # Emotional intensity:
+    # 30 * .01 = .3
+    #
+    # Total consolidation:
+    # +1.8
+    #
+    # 80 + 1.8 = 81.8
+
+    assert (
+        memory["clarity"]
+        == 81.8
+    )
+
+    assert (
+        memories_processed
+        == 1
+    )
+
+
+def test_sleep_cognitive_effects_require_canonical_sleep_event():
+    character = {
+        "current_emotions": {
+            "fear": 80,
+            "happiness": 10,
+        },
+
+        "memory": [
+            {
+                "id":
+                    1,
+
+                "created_day":
+                    1,
+
+                "clarity":
+                    80,
+
+                "importance":
+                    50,
+
+                "emotions": {
+                    "fear": 20,
+                },
+            },
+        ],
+    }
+
+    world = {
+        "day": 2,
+        "hour": 6,
+    }
+
+    sleep_event = {
+        "event_id":
+            "event_1",
+
+        "event_type":
+            "self_directed_outcome",
+
+        "details": {
+            "action_type":
+                "sleep",
+
+            "action_success":
+                True,
+
+            "duration_hours":
+                8,
+
+            "self_care":
+                True,
+
+            "slept":
+                True,
+
+            "recovered_energy":
+                True,
+        },
+    }
+
+    result = (
+        apply_sleep_cognitive_effects(
+            character,
+            world,
+            sleep_event,
+        )
+    )
+
+    assert (
+        result[
+            "hours_slept"
+        ]
+        == 8
+    )
+
+    assert (
+        result[
+            "memories_processed"
+        ]
+        == 1
+    )
+
+    assert (
+        character[
+            "current_emotions"
+        ][
+            "fear"
+        ]
+        < 80
+    )
+
+    assert (
+        character[
+            "current_emotions"
+        ][
+            "happiness"
+        ]
+        > 10
+    )
+
+    assert (
+        character[
+            "memory"
+        ][0][
+            "clarity"
+        ]
+        > 80
     )
