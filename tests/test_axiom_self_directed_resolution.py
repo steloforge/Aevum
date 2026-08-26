@@ -418,3 +418,143 @@ def test_self_directed_event_uses_post_action_world_time():
         event["hour"]
         == 11
     )
+
+def make_resting_character():
+    return {
+        "name":
+            "Test Character",
+
+        "needs": {
+            "hunger": 20,
+            "fatigue": 60,
+            "social": 10,
+            "family_responsibility": 15,
+            "training_drive": 25,
+        },
+    }
+
+
+def make_rest_action():
+    return {
+        "action":
+            "Rest for a while",
+
+        "action_type":
+            "rest",
+
+        "action_data": {
+            "name":
+                "Rest for a while",
+
+            "action_type":
+                "rest",
+
+            "tags": [
+                "self_care",
+            ],
+
+            "satisfies": {
+                "fatigue": 18,
+            },
+        },
+    }
+
+def test_rest_self_directed_action_succeeds():
+    character = (
+        make_resting_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+    }
+
+    result = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_rest_action(),
+        )
+    )
+
+    assert (
+        result["status"]
+        == "success"
+    )
+
+    assert (
+        result["action_type"]
+        == "rest"
+    )
+
+    assert (
+        result["duration_hours"]
+        == 2
+    )
+
+
+def test_rest_reduces_fatigue_then_applies_awake_drift():
+    character = (
+        make_resting_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+    }
+
+    resolve_self_directed_action(
+        world,
+        character,
+        make_rest_action(),
+    )
+
+    # 60 fatigue
+    # -18 from resting
+    # +3 from two waking hours
+    # = 45
+
+    assert (
+        character[
+            "needs"
+        ][
+            "fatigue"
+        ]
+        == 45.0
+    )
+
+    assert (
+        character[
+            "needs"
+        ][
+            "hunger"
+        ]
+        == 24.0
+    )
+
+
+def test_rest_advances_world_time_two_hours():
+    character = (
+        make_resting_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+    }
+
+    resolve_self_directed_action(
+        world,
+        character,
+        make_rest_action(),
+    )
+
+    assert (
+        world["day"]
+        == 1
+    )
+
+    assert (
+        world["hour"]
+        == 12
+    )
