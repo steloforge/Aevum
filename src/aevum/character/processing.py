@@ -35,6 +35,215 @@ from aevum.character.relationships import (
     update_relationship_from_memory,
 )
 
+# ============================================================
+# SLEEP EMOTIONAL RECOVERY
+# ============================================================
+
+
+def recover_emotions_during_sleep(
+    character,
+    hours_slept,
+):
+    """
+    Move persistent emotional state toward its baseline
+    more strongly during sleep.
+    """
+
+    if "current_emotions" not in character:
+        return {}
+
+    emotions = character[
+        "current_emotions"
+    ]
+
+    hourly_rate = 0.18
+
+    recovery_strength = (
+        1
+        - (
+            (1 - hourly_rate)
+            ** hours_slept
+        )
+    )
+
+    for emotion, current_value in emotions.items():
+
+        if emotion == "happiness":
+            baseline = 50
+        else:
+            baseline = 0
+
+        difference = (
+            baseline
+            - current_value
+        )
+
+        emotions[emotion] += (
+            difference
+            * recovery_strength
+        )
+
+        emotions[emotion] = round(
+            min(
+                max(
+                    emotions[emotion],
+                    0,
+                ),
+                100,
+            ),
+            2,
+        )
+
+    return emotions
+
+# ============================================================
+# SLEEP MEMORY CONSOLIDATION
+# ============================================================
+
+
+def consolidate_recent_memories_during_sleep(
+    character,
+    world,
+):
+    """
+    Consolidate memories from the character's most recent
+    waking period after sleep.
+    """
+
+    memories_processed = 0
+
+    for memory in character.get(
+        "memory",
+        [],
+    ):
+
+        created_day = memory.get(
+            "created_day"
+        )
+
+        if created_day is None:
+            continue
+
+        age_in_days = (
+            world["day"]
+            - created_day
+        )
+
+        if age_in_days not in [
+            0,
+            1,
+        ]:
+            continue
+
+        emotions = memory.get(
+            "emotions",
+            {},
+        )
+
+        emotional_intensity = sum(
+            emotions.values()
+        )
+
+        importance = memory.get(
+            "importance",
+            0,
+        )
+
+        consolidation_boost = (
+            importance
+            * 0.03
+        )
+
+        consolidation_boost += min(
+            emotional_intensity
+            * 0.01,
+            3,
+        )
+
+        if importance < 25:
+            consolidation_boost *= 0.40
+
+        consolidation_boost = min(
+            consolidation_boost,
+            6,
+        )
+
+        memory["clarity"] = (
+            memory.get(
+                "clarity",
+                0,
+            )
+            + consolidation_boost
+        )
+
+        memory["clarity"] = round(
+            min(
+                memory["clarity"],
+                100,
+            ),
+            2,
+        )
+
+        memories_processed += 1
+
+    return memories_processed
+
+# ============================================================
+# SLEEP COGNITIVE EFFECTS
+# ============================================================
+
+
+def apply_sleep_cognitive_effects(
+    character,
+    world,
+    outcome_event,
+):
+    """
+    Apply subjective cognitive consequences of a completed
+    sleep event.
+    """
+
+    details = outcome_event.get(
+        "details",
+        {},
+    )
+
+    if not details.get(
+        "slept",
+        False,
+    ):
+        return None
+
+    hours_slept = details.get(
+        "duration_hours",
+        0,
+    )
+
+    emotional_recovery = (
+        recover_emotions_during_sleep(
+            character,
+            hours_slept,
+        )
+    )
+
+    memories_processed = (
+        consolidate_recent_memories_during_sleep(
+            character,
+            world,
+        )
+    )
+
+    return {
+        "hours_slept":
+            hours_slept,
+
+        "emotional_recovery":
+            emotional_recovery,
+
+        "memories_processed":
+            memories_processed,
+    }
+
 def apply_interpreted_emotions(
     character,
     interpretation,
