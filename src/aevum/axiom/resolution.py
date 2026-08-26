@@ -491,6 +491,75 @@ def apply_awake_need_drift(
 
     return needs
 
+
+def resolve_waking_self_directed_action(
+    world,
+    character,
+    action_name,
+    action_type,
+    action_data,
+    duration_hours,
+):
+    """
+    Resolve the shared mechanics of a normal waking
+    self-directed action.
+    """
+
+    satisfies = action_data.get(
+        "satisfies",
+        {},
+    )
+
+    for need_name, reduction in satisfies.items():
+
+        if need_name not in character["needs"]:
+            continue
+
+        character["needs"][need_name] = round(
+            max(
+                character["needs"][need_name]
+                - reduction,
+                0,
+            ),
+            2,
+        )
+
+    advance_time(
+        world,
+        duration_hours,
+    )
+
+    apply_awake_need_drift(
+        character,
+        duration_hours,
+    )
+
+    return {
+        "status":
+            "success",
+
+        "action":
+            action_name,
+
+        "action_type":
+            action_type,
+
+        "action_data":
+            action_data,
+
+        "duration_hours":
+            duration_hours,
+
+        "reason":
+            (
+                f"{character['name']} "
+                f"completed {action_name}."
+            ),
+
+        "updated_needs":
+            character["needs"].copy(),
+    }
+
 def resolve_self_directed_action(
     world,
     character,
