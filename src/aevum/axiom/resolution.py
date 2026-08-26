@@ -630,6 +630,99 @@ def resolve_self_directed_action(
         }
 
     # ========================================================
+    # 2. REST
+    # ========================================================
+
+    if action_type == "rest":
+
+        duration_hours = 2
+
+        satisfies = action_data.get(
+            "satisfies",
+            {},
+        )
+
+        fatigue_reduction = (
+            satisfies.get(
+                "fatigue",
+                18,
+            )
+        )
+
+        # ----------------------------------------------------
+        # SATISFY FATIGUE
+        # ----------------------------------------------------
+
+        current_fatigue = (
+            character[
+                "needs"
+            ].get(
+                "fatigue",
+                0,
+            )
+        )
+
+        character[
+            "needs"
+        ][
+            "fatigue"
+        ] = round(
+            max(
+                current_fatigue
+                - fatigue_reduction,
+                0,
+            ),
+            2,
+        )
+
+        # ----------------------------------------------------
+        # TIME PASSES
+        # ----------------------------------------------------
+
+        advance_time(
+            world,
+            duration_hours,
+        )
+
+        # ----------------------------------------------------
+        # NORMAL WAKING NEED DRIFT
+        # ----------------------------------------------------
+
+        apply_awake_need_drift(
+            character,
+            duration_hours,
+        )
+
+        return {
+            "status":
+                "success",
+
+            "action":
+                action_name,
+
+            "action_type":
+                action_type,
+
+            "action_data":
+                action_data,
+
+            "duration_hours":
+                duration_hours,
+
+            "reason":
+                (
+                    f"{character['name']} "
+                    "rested for a while."
+                ),
+
+            "updated_needs":
+                character[
+                    "needs"
+                ].copy(),
+        }
+
+    
+    # ========================================================
     # 2. UNKNOWN SELF-DIRECTED ACTION
     # ========================================================
 
