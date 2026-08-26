@@ -782,7 +782,23 @@ def resolve_self_directed_action(
 
     
     # ========================================================
-    # 2. UNKNOWN SELF-DIRECTED ACTION
+    # 3. FAMILY DUTY
+    # ========================================================
+
+    if action_type == "family_duty":
+
+        return resolve_waking_self_directed_action(
+            world=world,
+            character=character,
+            action_name=action_name,
+            action_type=action_type,
+            action_data=action_data,
+            duration_hours=3,
+        )
+    
+    
+    # ========================================================
+    # 4. UNKNOWN SELF-DIRECTED ACTION
     # ========================================================
 
     return {
@@ -913,6 +929,37 @@ def create_self_directed_outcome_event(
         location = (
             "Family Living Quarters"
         )
+    
+    # ========================================================
+    # FAMILY DUTY
+    # ========================================================
+
+    elif action_type == "family_duty":
+
+        description = (
+            f"{character['name']} spent {duration} hours "
+            "helping operate the family shop."
+        )
+
+        details.update({
+            "helped_family":
+                True,
+
+            "supported_community":
+                True,
+
+            "fulfilled_responsibility":
+                True,
+        })
+
+        participants = [
+            character["name"],
+            "Ryuk's Mother",
+            "Ryuk's Father",
+        ]
+
+        location = "Family Shop"
+    
     
     
     # ========================================================
