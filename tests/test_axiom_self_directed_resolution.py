@@ -1473,3 +1473,286 @@ def test_social_family_creates_canonical_world_event():
         event["hour"]
         == 20
     )
+
+# ============================================================
+# SLEEP
+# ============================================================
+
+
+def make_sleeping_character():
+    return {
+        "name":
+            "Test Character",
+
+        "needs": {
+            "hunger": 20,
+            "fatigue": 70,
+            "social": 30,
+            "family_responsibility": 40,
+            "training_drive": 20,
+        },
+    }
+
+
+def make_sleep_action():
+    return {
+        "action":
+            "Go to sleep",
+
+        "action_type":
+            "sleep",
+
+        "action_data": {
+            "name":
+                "Go to sleep",
+
+            "action_type":
+                "sleep",
+
+            "tags": [
+                "self_care",
+                "sleep",
+            ],
+
+            "satisfies": {},
+        },
+    }
+
+
+def test_sleep_self_directed_action_succeeds():
+    character = (
+        make_sleeping_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 22,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_sleep_action(),
+        )
+    )
+
+    assert (
+        outcome["status"]
+        == "success"
+    )
+
+    assert (
+        outcome["action_type"]
+        == "sleep"
+    )
+
+    assert (
+        outcome["duration_hours"]
+        == 8
+    )
+
+
+def test_sleep_applies_sleep_specific_need_changes():
+    character = (
+        make_sleeping_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 22,
+    }
+
+    resolve_self_directed_action(
+        world,
+        character,
+        make_sleep_action(),
+    )
+
+    # Hunger:
+    # 20 + (1 * 8) = 28
+
+    assert (
+        character[
+            "needs"
+        ][
+            "hunger"
+        ]
+        == 28.0
+    )
+
+    # Fatigue:
+    # 70 - (10 * 8) = -10
+    # clamped to 0
+
+    assert (
+        character[
+            "needs"
+        ][
+            "fatigue"
+        ]
+        == 0
+    )
+
+    # Social and family responsibility
+    # do not grow during sleep.
+
+    assert (
+        character[
+            "needs"
+        ][
+            "social"
+        ]
+        == 30
+    )
+
+    assert (
+        character[
+            "needs"
+        ][
+            "family_responsibility"
+        ]
+        == 40
+    )
+
+    # Training drive:
+    # 20 + (.15 * 8) = 21.2
+
+    assert (
+        character[
+            "needs"
+        ][
+            "training_drive"
+        ]
+        == 21.2
+    )
+
+
+def test_sleep_can_cross_into_next_day():
+    character = (
+        make_sleeping_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 22,
+    }
+
+    resolve_self_directed_action(
+        world,
+        character,
+        make_sleep_action(),
+    )
+
+    # 22:00 + 8 hours
+    # = Day 2, 06:00
+
+    assert (
+        world["day"]
+        == 2
+    )
+
+    assert (
+        world["hour"]
+        == 6
+    )
+
+
+def test_sleep_creates_canonical_world_event():
+    character = (
+        make_sleeping_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 22,
+        "next_event_id": 1,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_sleep_action(),
+        )
+    )
+
+    event = (
+        create_self_directed_outcome_event(
+            world,
+            character,
+            outcome,
+        )
+    )
+
+    assert (
+        event["event_type"]
+        == "self_directed_outcome"
+    )
+
+    assert (
+        event["description"]
+        == (
+            "Test Character slept for "
+            "8 hours and woke feeling "
+            "more rested."
+        )
+    )
+
+    assert (
+        event["location"]
+        == "Family Living Quarters"
+    )
+
+    assert (
+        event["participants"]
+        == [
+            "Test Character",
+        ]
+    )
+
+    details = event[
+        "details"
+    ]
+
+    assert (
+        details["action_type"]
+        == "sleep"
+    )
+
+    assert (
+        details["action_success"]
+        is True
+    )
+
+    assert (
+        details["duration_hours"]
+        == 8
+    )
+
+    assert (
+        details["self_care"]
+        is True
+    )
+
+    assert (
+        details["slept"]
+        is True
+    )
+
+    assert (
+        details["recovered_energy"]
+        is True
+    )
+
+    # The event records completion time.
+
+    assert (
+        event["day"]
+        == 2
+    )
+
+    assert (
+        event["hour"]
+        == 6
+    )
