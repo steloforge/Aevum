@@ -612,18 +612,13 @@ def resolve_self_directed_action(
 
     if action_type == "eat":
 
-        duration_hours = 1
-
-        satisfies = action_data.get(
-            "satisfies",
-            {},
-        )
-
-        hunger_reduction = (
-            satisfies.get(
-                "hunger",
-                45,
-            )
+        return resolve_waking_self_directed_action(
+            world=world,
+            character=character,
+            action_name=action_name,
+            action_type=action_type,
+            action_data=action_data,
+            duration_hours=1,
         )
 
         # ----------------------------------------------------
@@ -704,18 +699,13 @@ def resolve_self_directed_action(
 
     if action_type == "rest":
 
-        duration_hours = 2
-
-        satisfies = action_data.get(
-            "satisfies",
-            {},
-        )
-
-        fatigue_reduction = (
-            satisfies.get(
-                "fatigue",
-                18,
-            )
+        return resolve_waking_self_directed_action(
+            world=world,
+            character=character,
+            action_name=action_name,
+            action_type=action_type,
+            action_data=action_data,
+            duration_hours=2,
         )
 
         # ----------------------------------------------------
