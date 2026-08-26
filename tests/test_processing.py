@@ -710,3 +710,158 @@ def test_sleep_cognitive_effects_require_canonical_sleep_event():
         ]
         > 80
     )
+
+def test_sleep_event_applies_cognitive_effects_in_processing_pipeline():
+    character = make_character()
+
+    character[
+        "current_emotions"
+    ][
+        "fear"
+    ] = 80
+
+    character[
+        "current_emotions"
+    ][
+        "happiness"
+    ] = 10
+
+    character["memory"] = [
+        {
+            "id":
+                1,
+
+            "created_day":
+                1,
+
+            "clarity":
+                80,
+
+            "importance":
+                50,
+
+            "emotions": {
+                "fear": 20,
+            },
+
+            "description":
+                "A difficult event happened.",
+
+            "interpretation":
+                "It was stressful.",
+
+            "people":
+                [],
+
+            "location":
+                "Family Shop",
+
+            "associations":
+                [],
+        },
+    ]
+
+    world = {
+        "day": 2,
+        "hour": 6,
+    }
+
+    event = {
+        "event_id":
+            "event_sleep",
+
+        "day":
+            2,
+
+        "event_type":
+            "self_directed_outcome",
+
+        "description":
+            (
+                "Test Character slept for "
+                "8 hours and woke feeling "
+                "more rested."
+            ),
+
+        "location":
+            "Family Living Quarters",
+
+        "participants": [
+            "Test Character",
+        ],
+
+        "details": {
+            "performed_action":
+                "Go to sleep",
+
+            "action_type":
+                "sleep",
+
+            "action_success":
+                True,
+
+            "duration_hours":
+                8,
+
+            "self_care":
+                True,
+
+            "slept":
+                True,
+
+            "recovered_energy":
+                True,
+        },
+    }
+
+    result = (
+        process_outcome_for_character(
+            character=character,
+            world=world,
+            outcome_event=event,
+            autosave_after=False,
+        )
+    )
+
+    assert (
+        result[
+            "sleep_cognitive_effects"
+        ]
+        is not None
+    )
+
+    assert (
+        result[
+            "sleep_cognitive_effects"
+        ][
+            "hours_slept"
+        ]
+        == 8
+    )
+
+    assert (
+        character[
+            "current_emotions"
+        ][
+            "fear"
+        ]
+        < 80
+    )
+
+    assert (
+        character[
+            "current_emotions"
+        ][
+            "happiness"
+        ]
+        > 10
+    )
+
+    assert (
+        character[
+            "memory"
+        ][0][
+            "clarity"
+        ]
+        > 80
+    )
