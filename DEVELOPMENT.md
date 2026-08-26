@@ -243,3 +243,125 @@ Scored actions intentionally preserve both:
 
 This avoids duplicate dictionary keys and preserves both display information
 and structured action metadata for downstream Axiom resolution.
+
+## Autonomous Cognition Loop Milestone
+
+Aevum now supports its first complete autonomous character-action loop.
+
+The initial validated action is `eat`.
+
+The full path is:
+
+Character internal state
+→ self-directed candidate generation
+→ availability filtering
+→ autonomous action scoring
+→ intention selection
+→ Axiom self-directed resolution
+→ authoritative need and time changes
+→ canonical world event
+→ character perception
+→ interpretation
+→ emotional response
+→ memory
+→ relationships
+→ self-concept
+→ beliefs
+
+### Architectural boundary
+
+The autonomous system preserves a strict separation between intention,
+reality, and subjective cognition.
+
+**Character Decision**
+
+The character decision system determines what the character wants to do.
+
+It may consider:
+
+- needs
+- sleep pressure
+- preferences
+- recent repetition
+- time of day
+- values
+- goals
+- ambition
+- discipline
+- risk hesitation
+- action availability
+
+The decision layer produces an intention. It does not directly mutate
+canonical world state.
+
+**Axiom Resolution**
+
+Axiom determines what actually happens.
+
+For the first implemented autonomous action, `eat`, Axiom:
+
+- resolves the action successfully
+- reduces hunger according to the action's satisfaction data
+- advances authoritative world time
+- applies normal waking need drift
+- produces an authoritative action outcome
+
+**Canonical Event**
+
+The resolved action is converted into a canonical
+`self_directed_outcome` world event.
+
+This creates a common boundary between autonomous behavior and the existing
+character cognition pipeline.
+
+**Character Cognition**
+
+Once an autonomous action becomes a canonical event, it is processed through
+the same cognition pipeline as other world events.
+
+The character can therefore perceive, interpret, emotionally respond to,
+remember, and psychologically incorporate something they chose to do
+themselves.
+
+No special autonomous-memory path is required.
+
+### First validated vertical slice
+
+The current integration test demonstrates:
+
+60 hunger
+→ character eats
+→ meal satisfies 45 hunger
+→ one hour passes
+→ normal waking hunger drift adds 2
+→ final hunger is 17
+→ canonical self-directed outcome is created
+→ character perceives the event
+→ character forms a memory of eating
+
+This establishes the first end-to-end autonomous cognition loop in Aevum.
+
+### Future autonomous actions
+
+The remaining baseline self-directed actions should be migrated through the
+same architecture:
+
+- `rest`
+- `sleep`
+- `family_duty`
+- `train`
+- `social_family`
+
+Each action should preserve the same boundary:
+
+intention
+→ Axiom resolution
+→ canonical event
+→ cognition
+
+Action-specific consequences should remain authoritative Axiom behavior,
+while subjective interpretation remains character-owned.
+
+### Test checkpoint
+
+142 tests passing at completion of the first autonomous cognition loop.
