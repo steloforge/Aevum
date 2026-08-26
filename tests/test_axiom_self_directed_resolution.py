@@ -1,4 +1,5 @@
 from aevum.axiom.resolution import (
+    create_self_directed_outcome_event,
     resolve_self_directed_action,
 )
 
@@ -247,4 +248,173 @@ def test_eating_applies_normal_awake_need_drift():
             "training_drive"
         ]
         == 25.5
+    )
+
+def test_eat_resolution_creates_canonical_world_event():
+    character = (
+        make_eating_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+        "next_event_id": 1,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_eat_action(),
+        )
+    )
+
+    event = (
+        create_self_directed_outcome_event(
+            world,
+            character,
+            outcome,
+        )
+    )
+
+    assert (
+        event["event_type"]
+        == "self_directed_outcome"
+    )
+
+    assert (
+        event["description"]
+        == (
+            "Test Character "
+            "took time to eat a meal."
+        )
+    )
+
+    assert (
+        event["location"]
+        == "Family Shop"
+    )
+
+    assert (
+        event["participants"]
+        == [
+            "Test Character",
+        ]
+    )
+
+
+def test_eat_world_event_contains_authoritative_details():
+    character = (
+        make_eating_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+        "next_event_id": 1,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_eat_action(),
+        )
+    )
+
+    event = (
+        create_self_directed_outcome_event(
+            world,
+            character,
+            outcome,
+        )
+    )
+
+    details = event[
+        "details"
+    ]
+
+    assert (
+        details[
+            "performed_action"
+        ]
+        == "Eat a meal"
+    )
+
+    assert (
+        details[
+            "action_type"
+        ]
+        == "eat"
+    )
+
+    assert (
+        details[
+            "action_success"
+        ]
+        is True
+    )
+
+    assert (
+        details[
+            "duration_hours"
+        ]
+        == 1
+    )
+
+    assert (
+        details[
+            "self_care"
+        ]
+        is True
+    )
+
+    assert (
+        details[
+            "satisfied_hunger"
+        ]
+        is True
+    )
+
+
+def test_self_directed_event_uses_post_action_world_time():
+    character = (
+        make_eating_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+        "next_event_id": 1,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_eat_action(),
+        )
+    )
+
+    event = (
+        create_self_directed_outcome_event(
+            world,
+            character,
+            outcome,
+        )
+    )
+
+    # Eating takes one hour.
+    #
+    # The canonical outcome event records
+    # when the completed outcome exists.
+
+    assert (
+        event["day"]
+        == 1
+    )
+
+    assert (
+        event["hour"]
+        == 11
     )
