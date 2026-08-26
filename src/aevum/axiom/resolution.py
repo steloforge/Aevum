@@ -811,8 +811,24 @@ def resolve_self_directed_action(
             duration_hours=2,
         )
     
+    
     # ========================================================
-    # 5. UNKNOWN SELF-DIRECTED ACTION
+    # 5. FAMILY SOCIAL TIME
+    # ========================================================
+
+    if action_type == "social_family":
+
+        return resolve_waking_self_directed_action(
+            world=world,
+            character=character,
+            action_name=action_name,
+            action_type=action_type,
+            action_data=action_data,
+            duration_hours=2,
+        )
+    
+    # ========================================================
+    # 6. UNKNOWN SELF-DIRECTED ACTION
     # ========================================================
 
     return {
@@ -1005,6 +1021,36 @@ def create_self_directed_outcome_event(
             "Private Training Area"
         )
     
+    # ========================================================
+    # FAMILY SOCIAL TIME
+    # ========================================================
+
+    elif action_type == "social_family":
+
+        description = (
+            f"{character['name']} spent "
+            f"{duration_hours} hours "
+            "relaxing with family."
+        )
+
+        details.update({
+            "spent_time_with_family":
+                True,
+
+            "social_connection":
+                True,
+        })
+
+        participants = [
+            character["name"],
+            "Ryuk's Mother",
+            "Ryuk's Father",
+            "Younger Sister",
+        ]
+
+        location = (
+            "Family Living Quarters"
+        )
     
     # ========================================================
     # FALLBACK
