@@ -362,7 +362,20 @@ def process_outcome_for_character(
     )
 
     # --------------------------------------------------------
-    # 5. RELATIONSHIPS
+    # 5. SLEEP COGNITIVE EFFECTS
+    # --------------------------------------------------------
+
+    sleep_cognitive_effects = (
+        apply_sleep_cognitive_effects(
+            character,
+            world,
+            outcome_event,
+        )
+    )
+    
+    
+    # --------------------------------------------------------
+    # 6. RELATIONSHIPS
     # --------------------------------------------------------
 
     relationship_updates = (
@@ -373,7 +386,7 @@ def process_outcome_for_character(
     )
     
     # --------------------------------------------------------
-    # 6. SELF-CONCEPT
+    # 7. SELF-CONCEPT
     # --------------------------------------------------------
 
     self_concept = update_self_concept(
@@ -383,7 +396,7 @@ def process_outcome_for_character(
     )
 
     # --------------------------------------------------------
-    # 7. BELIEFS
+    # 8. BELIEFS
     # --------------------------------------------------------
 
     belief_matches = (
@@ -416,7 +429,7 @@ def process_outcome_for_character(
         )
 
     # --------------------------------------------------------
-    # 8. AUTOSAVE
+    # 9. AUTOSAVE
     # --------------------------------------------------------
 
     if (
@@ -465,4 +478,7 @@ def process_outcome_for_character(
                
         "relationship_updates":
             relationship_updates,
+        
+        "sleep_cognitive_effects":
+            sleep_cognitive_effects,
     }
