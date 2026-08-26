@@ -956,3 +956,262 @@ def test_family_duty_creates_canonical_world_event():
         event["hour"]
         == 13
     )
+
+# ============================================================
+# TRAINING
+# ============================================================
+
+
+def make_training_character():
+    return {
+        "name":
+            "Test Character",
+
+        "needs": {
+            "hunger": 20,
+            "fatigue": 20,
+            "social": 10,
+            "family_responsibility": 15,
+            "training_drive": 70,
+        },
+    }
+
+
+def make_train_action():
+    return {
+        "action":
+            "Practice knight techniques in secret",
+
+        "action_type":
+            "train",
+
+        "action_data": {
+            "name":
+                "Practice knight techniques in secret",
+
+            "action_type":
+                "train",
+
+            "tags": [
+                "ambition",
+                "discipline",
+                "risk",
+            ],
+
+            "satisfies": {
+                "training_drive": 40,
+            },
+        },
+    }
+
+
+def test_train_self_directed_action_succeeds():
+    character = (
+        make_training_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 18,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_train_action(),
+        )
+    )
+
+    assert (
+        outcome["status"]
+        == "success"
+    )
+
+    assert (
+        outcome["action_type"]
+        == "train"
+    )
+
+    assert (
+        outcome["duration_hours"]
+        == 2
+    )
+
+
+def test_training_applies_need_changes_and_time():
+    character = (
+        make_training_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 18,
+    }
+
+    resolve_self_directed_action(
+        world,
+        character,
+        make_train_action(),
+    )
+
+    # Training drive:
+    #
+    # 70
+    # -40 from training
+    # +1 from two waking hours
+    # = 31
+
+    assert (
+        character[
+            "needs"
+        ][
+            "training_drive"
+        ]
+        == 31.0
+    )
+
+    # Two hours of ordinary waking drift.
+
+    assert (
+        character[
+            "needs"
+        ][
+            "hunger"
+        ]
+        == 24.0
+    )
+
+    assert (
+        character[
+            "needs"
+        ][
+            "fatigue"
+        ]
+        == 23.0
+    )
+
+    assert (
+        character[
+            "needs"
+        ][
+            "social"
+        ]
+        == 10.6
+    )
+
+    assert (
+        character[
+            "needs"
+        ][
+            "family_responsibility"
+        ]
+        == 15.8
+    )
+
+    assert (
+        world["day"]
+        == 1
+    )
+
+    assert (
+        world["hour"]
+        == 20
+    )
+
+
+def test_training_creates_canonical_world_event():
+    character = (
+        make_training_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 18,
+        "next_event_id": 1,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_train_action(),
+        )
+    )
+
+    event = (
+        create_self_directed_outcome_event(
+            world,
+            character,
+            outcome,
+        )
+    )
+
+    assert (
+        event["event_type"]
+        == "self_directed_outcome"
+    )
+
+    assert (
+        event["description"]
+        == (
+            "Test Character spent 2 hours secretly "
+            "practicing knight martial techniques."
+        )
+    )
+
+    assert (
+        event["location"]
+        == "Private Training Area"
+    )
+
+    assert (
+        event["participants"]
+        == [
+            "Test Character",
+        ]
+    )
+
+    details = event[
+        "details"
+    ]
+
+    assert (
+        details["action_type"]
+        == "train"
+    )
+
+    assert (
+        details["action_success"]
+        is True
+    )
+
+    assert (
+        details["duration_hours"]
+        == 2
+    )
+
+    assert (
+        details["trained_skill"]
+        is True
+    )
+
+    assert (
+        details["secret_training"]
+        is True
+    )
+
+    assert (
+        details["pursued_goal"]
+        == "Become a knight"
+    )
+
+    assert (
+        event["day"]
+        == 1
+    )
+
+    assert (
+        event["hour"]
+        == 20
+    )
