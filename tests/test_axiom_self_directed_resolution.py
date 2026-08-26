@@ -558,3 +558,128 @@ def test_rest_advances_world_time_two_hours():
         world["hour"]
         == 12
     )
+
+def test_rest_resolution_creates_canonical_world_event():
+    character = (
+        make_resting_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+        "next_event_id": 1,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_rest_action(),
+        )
+    )
+
+    event = (
+        create_self_directed_outcome_event(
+            world,
+            character,
+            outcome,
+        )
+    )
+
+    assert (
+        event["event_type"]
+        == "self_directed_outcome"
+    )
+
+    assert (
+        event["description"]
+        == (
+            "Test Character "
+            "took time to rest and recover."
+        )
+    )
+
+    assert (
+        event["location"]
+        == "Family Living Quarters"
+    )
+
+    assert (
+        event["participants"]
+        == [
+            "Test Character",
+        ]
+    )
+
+
+def test_rest_world_event_contains_authoritative_details():
+    character = (
+        make_resting_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+        "next_event_id": 1,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_rest_action(),
+        )
+    )
+
+    event = (
+        create_self_directed_outcome_event(
+            world,
+            character,
+            outcome,
+        )
+    )
+
+    details = event[
+        "details"
+    ]
+
+    assert (
+        details[
+            "action_type"
+        ]
+        == "rest"
+    )
+
+    assert (
+        details[
+            "action_success"
+        ]
+        is True
+    )
+
+    assert (
+        details[
+            "duration_hours"
+        ]
+        == 2
+    )
+
+    assert (
+        details[
+            "self_care"
+        ]
+        is True
+    )
+
+    assert (
+        details[
+            "recovered_fatigue"
+        ]
+        is True
+    )
+
+    # Rest began at 10:00 and lasted two hours.
+    assert (
+        event["hour"]
+        == 12
+    )
