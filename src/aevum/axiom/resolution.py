@@ -937,7 +937,7 @@ def create_self_directed_outcome_event(
     elif action_type == "family_duty":
 
         description = (
-            f"{character['name']} spent {duration} hours "
+            f"{character['name']} spent {duration_hours} hours "
             "helping operate the family shop."
         )
 
