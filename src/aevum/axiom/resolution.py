@@ -71,7 +71,7 @@ def resolve_action_outcome(
         f"Location: {location}"
     )
 
-     # ========================================================
+    # ========================================================
     # 1. WORLD LAW CHECK
     # ========================================================
 
@@ -502,54 +502,46 @@ def apply_sleep_need_recovery(
     hours_slept,
 ):
     """
-    Apply need changes while a character sleeps.
+    Apply authoritative physical need changes during sleep.
 
-    Sleep restores fatigue while other biological and
-    social needs continue changing over time.
+    Hunger continues to rise while sleeping, fatigue recovers
+    strongly, and training drive rises slightly as the
+    character becomes rested.
+
+    Social and family-responsibility pressure do not
+    meaningfully grow during sleep.
     """
 
     needs = character[
         "needs"
     ]
 
-    needs["fatigue"] = (
-        needs.get(
-            "fatigue",
-            0,
-        )
-        - 8.0 * hours_slept
-    )
-
+    # Hunger develops more slowly than while awake.
     needs["hunger"] = (
         needs.get(
             "hunger",
             0,
         )
-        + 0.5 * hours_slept
+        + 1.0 * hours_slept
     )
 
-    needs["social"] = (
+    # Sleep strongly restores fatigue.
+    needs["fatigue"] = (
         needs.get(
-            "social",
+            "fatigue",
             0,
         )
-        + 0.15 * hours_slept
+        - 10.0 * hours_slept
     )
 
-    needs["family_responsibility"] = (
-        needs.get(
-            "family_responsibility",
-            0,
-        )
-        + 0.2 * hours_slept
-    )
-
+    # Becoming rested can slightly renew
+    # motivation to pursue training.
     needs["training_drive"] = (
         needs.get(
             "training_drive",
             0,
         )
-        + 0.25 * hours_slept
+        + 0.15 * hours_slept
     )
 
     for need_name in needs:
