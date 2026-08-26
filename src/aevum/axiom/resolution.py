@@ -492,6 +492,81 @@ def apply_awake_need_drift(
     return needs
 
 
+# ============================================================
+# SLEEP NEED RECOVERY
+# ============================================================
+
+
+def apply_sleep_need_recovery(
+    character,
+    hours_slept,
+):
+    """
+    Apply need changes while a character sleeps.
+
+    Sleep restores fatigue while other biological and
+    social needs continue changing over time.
+    """
+
+    needs = character[
+        "needs"
+    ]
+
+    needs["fatigue"] = (
+        needs.get(
+            "fatigue",
+            0,
+        )
+        - 8.0 * hours_slept
+    )
+
+    needs["hunger"] = (
+        needs.get(
+            "hunger",
+            0,
+        )
+        + 0.5 * hours_slept
+    )
+
+    needs["social"] = (
+        needs.get(
+            "social",
+            0,
+        )
+        + 0.15 * hours_slept
+    )
+
+    needs["family_responsibility"] = (
+        needs.get(
+            "family_responsibility",
+            0,
+        )
+        + 0.2 * hours_slept
+    )
+
+    needs["training_drive"] = (
+        needs.get(
+            "training_drive",
+            0,
+        )
+        + 0.25 * hours_slept
+    )
+
+    for need_name in needs:
+
+        needs[need_name] = round(
+            min(
+                max(
+                    needs[need_name],
+                    0,
+                ),
+                100,
+            ),
+            2,
+        )
+
+    return needs
+
 def resolve_waking_self_directed_action(
     world,
     character,
@@ -558,6 +633,65 @@ def resolve_waking_self_directed_action(
 
         "updated_needs":
             character["needs"].copy(),
+    }
+
+# ============================================================
+# RESOLVE SLEEP ACTION
+# ============================================================
+
+
+def resolve_sleep_action(
+    world,
+    character,
+    action_name,
+    action_type,
+    action_data,
+    duration_hours,
+):
+    """
+    Resolve the authoritative physical consequences of sleep.
+
+    Cognitive sleep effects such as emotional recovery and
+    memory consolidation belong to character cognition rather
+    than Axiom world resolution.
+    """
+
+    advance_time(
+        world,
+        duration_hours,
+    )
+
+    apply_sleep_need_recovery(
+        character,
+        duration_hours,
+    )
+
+    return {
+        "status":
+            "success",
+
+        "action":
+            action_name,
+
+        "action_type":
+            action_type,
+
+        "action_data":
+            action_data,
+
+        "duration_hours":
+            duration_hours,
+
+        "reason":
+            (
+                f"{character['name']} "
+                f"slept for {duration_hours} hours."
+            ),
+
+        "updated_needs":
+            character[
+                "needs"
+            ].copy(),
     }
 
 def resolve_self_directed_action(
@@ -828,7 +962,23 @@ def resolve_self_directed_action(
         )
     
     # ========================================================
-    # 6. UNKNOWN SELF-DIRECTED ACTION
+    # 6. SLEEP
+    # ========================================================
+
+    if action_type == "sleep":
+
+        return resolve_sleep_action(
+            world=world,
+            character=character,
+            action_name=action_name,
+            action_type=action_type,
+            action_data=action_data,
+            duration_hours=8,
+        )
+    
+    
+    # ========================================================
+    # 7. UNKNOWN SELF-DIRECTED ACTION
     # ========================================================
 
     return {
@@ -1051,6 +1201,38 @@ def create_self_directed_outcome_event(
         location = (
             "Family Living Quarters"
         )
+    
+    # ========================================================
+    # SLEEPING
+    # ========================================================
+
+    elif action_type == "sleep":
+
+        description = (
+            f"{character['name']} slept for "
+            f"{duration_hours} hours "
+            "and woke feeling more rested."
+        )
+
+        details.update({
+            "self_care":
+                True,
+
+            "slept":
+                True,
+
+            "recovered_energy":
+                True,
+        })
+
+        participants = [
+            character["name"],
+        ]
+
+        location = (
+            "Family Living Quarters"
+        )
+    
     
     # ========================================================
     # FALLBACK
