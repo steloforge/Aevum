@@ -683,3 +683,276 @@ def test_rest_world_event_contains_authoritative_details():
         event["hour"]
         == 12
     )
+
+# ============================================================
+# FAMILY DUTY
+# ============================================================
+
+
+def make_family_duty_character():
+    return {
+        "name":
+            "Test Character",
+
+        "needs": {
+            "hunger": 20,
+            "fatigue": 20,
+            "social": 40,
+            "family_responsibility": 70,
+            "training_drive": 20,
+        },
+    }
+
+
+def make_family_duty_action():
+    return {
+        "action":
+            "Help at the family shop",
+
+        "action_type":
+            "family_duty",
+
+        "action_data": {
+            "name":
+                "Help at the family shop",
+
+            "action_type":
+                "family_duty",
+
+            "tags": [
+                "family",
+                "community",
+                "honor",
+            ],
+
+            "satisfies": {
+                "family_responsibility": 35,
+                "social": 10,
+            },
+        },
+    }
+
+
+def test_family_duty_self_directed_action_succeeds():
+    character = (
+        make_family_duty_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_family_duty_action(),
+        )
+    )
+
+    assert (
+        outcome["status"]
+        == "success"
+    )
+
+    assert (
+        outcome["action_type"]
+        == "family_duty"
+    )
+
+    assert (
+        outcome["duration_hours"]
+        == 3
+    )
+
+
+def test_family_duty_applies_need_changes_and_time():
+    character = (
+        make_family_duty_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+    }
+
+    resolve_self_directed_action(
+        world,
+        character,
+        make_family_duty_action(),
+    )
+
+    # Family responsibility:
+    # 70 - 35 + 1.2 = 36.2
+
+    assert (
+        character[
+            "needs"
+        ][
+            "family_responsibility"
+        ]
+        == 36.2
+    )
+
+    # Social:
+    # 40 - 10 + 0.9 = 30.9
+
+    assert (
+        character[
+            "needs"
+        ][
+            "social"
+        ]
+        == 30.9
+    )
+
+    # Three hours of normal waking drift.
+
+    assert (
+        character[
+            "needs"
+        ][
+            "hunger"
+        ]
+        == 26.0
+    )
+
+    assert (
+        character[
+            "needs"
+        ][
+            "fatigue"
+        ]
+        == 24.5
+    )
+
+    assert (
+        character[
+            "needs"
+        ][
+            "training_drive"
+        ]
+        == 21.5
+    )
+
+    assert (
+        world["day"]
+        == 1
+    )
+
+    assert (
+        world["hour"]
+        == 13
+    )
+
+
+def test_family_duty_creates_canonical_world_event():
+    character = (
+        make_family_duty_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 10,
+        "next_event_id": 1,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_family_duty_action(),
+        )
+    )
+
+    event = (
+        create_self_directed_outcome_event(
+            world,
+            character,
+            outcome,
+        )
+    )
+
+    assert (
+        event["event_type"]
+        == "self_directed_outcome"
+    )
+
+    assert (
+        event["description"]
+        == (
+            "Test Character spent 3 hours "
+            "helping operate the family shop."
+        )
+    )
+
+    assert (
+        event["location"]
+        == "Family Shop"
+    )
+
+    assert (
+        event["participants"]
+        == [
+            "Test Character",
+            "Ryuk's Mother",
+            "Ryuk's Father",
+        ]
+    )
+
+    details = event[
+        "details"
+    ]
+
+    assert (
+        details[
+            "action_type"
+        ]
+        == "family_duty"
+    )
+
+    assert (
+        details[
+            "action_success"
+        ]
+        is True
+    )
+
+    assert (
+        details[
+            "duration_hours"
+        ]
+        == 3
+    )
+
+    assert (
+        details[
+            "helped_family"
+        ]
+        is True
+    )
+
+    assert (
+        details[
+            "supported_community"
+        ]
+        is True
+    )
+
+    assert (
+        details[
+            "fulfilled_responsibility"
+        ]
+        is True
+    )
+
+    assert (
+        event["day"]
+        == 1
+    )
+
+    assert (
+        event["hour"]
+        == 13
+    )
