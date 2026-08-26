@@ -351,18 +351,7 @@ def process_outcome_for_character(
     )
 
     # --------------------------------------------------------
-    # 4. MEMORY
-    # --------------------------------------------------------
-
-    memory = create_memory_from_event(
-        character,
-        world,
-        perception,
-        interpretation,
-    )
-
-    # --------------------------------------------------------
-    # 5. SLEEP COGNITIVE EFFECTS
+    # 4. SLEEP COGNITIVE EFFECTS
     # --------------------------------------------------------
 
     sleep_cognitive_effects = (
@@ -371,6 +360,18 @@ def process_outcome_for_character(
             world,
             outcome_event,
         )
+    )
+    
+    
+    # --------------------------------------------------------
+    # 5. MEMORY
+    # --------------------------------------------------------
+
+    memory = create_memory_from_event(
+        character,
+        world,
+        perception,
+        interpretation,
     )
     
     
