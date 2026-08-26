@@ -655,6 +655,120 @@ def resolve_self_directed_action(
 
 
 
+# ============================================================
+# CREATE SELF-DIRECTED OUTCOME EVENT
+# ============================================================
+
+
+def create_self_directed_outcome_event(
+    world,
+    character,
+    self_outcome,
+):
+    """
+    Convert an authoritative self-directed action resolution
+    into a canonical Axiom world event.
+
+    The resolution determines what actually happened.
+    This function records that outcome in canonical event form.
+    """
+
+    action_name = self_outcome[
+        "action"
+    ]
+
+    action_type = self_outcome[
+        "action_type"
+    ]
+
+    status = self_outcome[
+        "status"
+    ]
+
+    duration_hours = self_outcome.get(
+        "duration_hours",
+        0,
+    )
+
+    details = {
+        "performed_action":
+            action_name,
+
+        "action_type":
+            action_type,
+
+        "action_success":
+            status == "success",
+
+        "duration_hours":
+            duration_hours,
+    }
+
+    # ========================================================
+    # EATING
+    # ========================================================
+
+    if action_type == "eat":
+
+        description = (
+            f"{character['name']} "
+            "took time to eat a meal."
+        )
+
+        details.update({
+            "self_care":
+                True,
+
+            "satisfied_hunger":
+                True,
+        })
+
+        participants = [
+            character[
+                "name"
+            ],
+        ]
+
+        location = (
+            "Family Shop"
+        )
+
+    # ========================================================
+    # FALLBACK
+    # ========================================================
+
+    else:
+
+        description = (
+            self_outcome.get(
+                "reason",
+                (
+                    f"{character['name']} "
+                    f"attempted {action_name}."
+                ),
+            )
+        )
+
+        participants = [
+            character[
+                "name"
+            ],
+        ]
+
+        location = "Unknown"
+
+    return create_world_event(
+        world=world,
+        event_type=(
+            "self_directed_outcome"
+        ),
+        description=description,
+        location=location,
+        participants=participants,
+        details=details,
+    )
+
+
 def create_outcome_event(
     world,
     character,
