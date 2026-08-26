@@ -795,10 +795,24 @@ def resolve_self_directed_action(
             action_data=action_data,
             duration_hours=3,
         )
-    
+
+    # ========================================================
+    # 4. TRAIN
+    # ========================================================
+
+    if action_type == "train":
+
+        return resolve_waking_self_directed_action(
+            world=world,
+            character=character,
+            action_name=action_name,
+            action_type=action_type,
+            action_data=action_data,
+            duration_hours=2,
+        )
     
     # ========================================================
-    # 4. UNKNOWN SELF-DIRECTED ACTION
+    # 5. UNKNOWN SELF-DIRECTED ACTION
     # ========================================================
 
     return {
