@@ -1215,3 +1215,261 @@ def test_training_creates_canonical_world_event():
         event["hour"]
         == 20
     )
+
+# ============================================================
+# FAMILY SOCIAL TIME
+# ============================================================
+
+
+def make_social_family_character():
+    return {
+        "name":
+            "Test Character",
+
+        "needs": {
+            "hunger": 20,
+            "fatigue": 20,
+            "social": 70,
+            "family_responsibility": 50,
+            "training_drive": 20,
+        },
+    }
+
+
+def make_social_family_action():
+    return {
+        "action":
+            "Spend time with family",
+
+        "action_type":
+            "social_family",
+
+        "action_data": {
+            "name":
+                "Spend time with family",
+
+            "action_type":
+                "social_family",
+
+            "tags": [
+                "family",
+                "social",
+            ],
+
+            "satisfies": {
+                "social": 30,
+                "family_responsibility": 15,
+            },
+        },
+    }
+
+
+def test_social_family_self_directed_action_succeeds():
+    character = (
+        make_social_family_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 18,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_social_family_action(),
+        )
+    )
+
+    assert (
+        outcome["status"]
+        == "success"
+    )
+
+    assert (
+        outcome["action_type"]
+        == "social_family"
+    )
+
+    assert (
+        outcome["duration_hours"]
+        == 2
+    )
+
+
+def test_social_family_applies_need_changes_and_time():
+    character = (
+        make_social_family_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 18,
+    }
+
+    resolve_self_directed_action(
+        world,
+        character,
+        make_social_family_action(),
+    )
+
+    # Social:
+    # 70 - 30 + 0.6 = 40.6
+
+    assert (
+        character[
+            "needs"
+        ][
+            "social"
+        ]
+        == 40.6
+    )
+
+    # Family responsibility:
+    # 50 - 15 + 0.8 = 35.8
+
+    assert (
+        character[
+            "needs"
+        ][
+            "family_responsibility"
+        ]
+        == 35.8
+    )
+
+    assert (
+        character[
+            "needs"
+        ][
+            "hunger"
+        ]
+        == 24.0
+    )
+
+    assert (
+        character[
+            "needs"
+        ][
+            "fatigue"
+        ]
+        == 23.0
+    )
+
+    assert (
+        character[
+            "needs"
+        ][
+            "training_drive"
+        ]
+        == 21.0
+    )
+
+    assert (
+        world["day"]
+        == 1
+    )
+
+    assert (
+        world["hour"]
+        == 20
+    )
+
+
+def test_social_family_creates_canonical_world_event():
+    character = (
+        make_social_family_character()
+    )
+
+    world = {
+        "day": 1,
+        "hour": 18,
+        "next_event_id": 1,
+    }
+
+    outcome = (
+        resolve_self_directed_action(
+            world,
+            character,
+            make_social_family_action(),
+        )
+    )
+
+    event = (
+        create_self_directed_outcome_event(
+            world,
+            character,
+            outcome,
+        )
+    )
+
+    assert (
+        event["event_type"]
+        == "self_directed_outcome"
+    )
+
+    assert (
+        event["description"]
+        == (
+            "Test Character spent 2 hours "
+            "relaxing with family."
+        )
+    )
+
+    assert (
+        event["location"]
+        == "Family Living Quarters"
+    )
+
+    assert (
+        event["participants"]
+        == [
+            "Test Character",
+            "Ryuk's Mother",
+            "Ryuk's Father",
+            "Younger Sister",
+        ]
+    )
+
+    details = event[
+        "details"
+    ]
+
+    assert (
+        details["action_type"]
+        == "social_family"
+    )
+
+    assert (
+        details["action_success"]
+        is True
+    )
+
+    assert (
+        details["duration_hours"]
+        == 2
+    )
+
+    assert (
+        details[
+            "spent_time_with_family"
+        ]
+        is True
+    )
+
+    assert (
+        details[
+            "social_connection"
+        ]
+        is True
+    )
+
+    assert (
+        event["day"]
+        == 1
+    )
+
+    assert (
+        event["hour"]
+        == 20
+    )
