@@ -365,3 +365,32 @@ while subjective interpretation remains character-owned.
 ### Test checkpoint
 
 142 tests passing at completion of the first autonomous cognition loop.
+
+### Data-driven autonomous action system
+
+The current self-directed action catalog is intentionally fixed while the
+baseline behavior is being migrated and validated.
+
+Future work should move autonomous actions into structured, extensible action
+definitions so new actions can be added without modifying the core decision
+scorer.
+
+Candidate actions should eventually be derived from:
+
+- character skills and capabilities
+- roles and professions
+- equipment and resources
+- current location
+- known locations
+- relationships
+- world state
+- laws and permissions
+- learned knowledge
+- temporary conditions
+- action-specific requirements
+
+The long-term goal is for characters to dynamically gain or lose possible
+actions as their circumstances change.
+
+The decision system should remain responsible for desirability and selection,
+while Axiom remains responsible for authoritative validation and outcomes.
