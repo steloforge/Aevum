@@ -827,6 +827,36 @@ def create_self_directed_outcome_event(
         )
 
     # ========================================================
+    # RESTING
+    # ========================================================
+
+    elif action_type == "rest":
+
+        description = (
+            f"{character['name']} "
+            "took time to rest and recover."
+        )
+
+        details.update({
+            "self_care":
+                True,
+
+            "recovered_fatigue":
+                True,
+        })
+
+        participants = [
+            character[
+                "name"
+            ],
+        ]
+
+        location = (
+            "Family Living Quarters"
+        )
+    
+    
+    # ========================================================
     # FALLBACK
     # ========================================================
 
