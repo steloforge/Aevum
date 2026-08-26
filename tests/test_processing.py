@@ -865,3 +865,150 @@ def test_sleep_event_applies_cognitive_effects_in_processing_pipeline():
         ]
         > 80
     )
+
+def test_sleep_does_not_immediately_consolidate_its_own_memory():
+    character = make_character()
+
+    character["memory"] = [
+        {
+            "id":
+                1,
+
+            "created_day":
+                1,
+
+            "clarity":
+                80,
+
+            "importance":
+                50,
+
+            "emotions": {
+                "fear": 20,
+            },
+
+            "description":
+                "A difficult event happened.",
+
+            "interpretation":
+                "It was stressful.",
+
+            "people":
+                [],
+
+            "location":
+                "Family Shop",
+
+            "associations":
+                [],
+        },
+    ]
+
+    world = {
+        "day": 2,
+        "hour": 6,
+    }
+
+    event = {
+        "event_id":
+            "event_sleep",
+
+        "day":
+            2,
+
+        "event_type":
+            "self_directed_outcome",
+
+        "description":
+            (
+                "Test Character slept for "
+                "8 hours and woke feeling "
+                "more rested."
+            ),
+
+        "location":
+            "Family Living Quarters",
+
+        "participants": [
+            "Test Character",
+        ],
+
+        "details": {
+            "performed_action":
+                "Go to sleep",
+
+            "action_type":
+                "sleep",
+
+            "action_success":
+                True,
+
+            "duration_hours":
+                8,
+
+            "self_care":
+                True,
+
+            "slept":
+                True,
+
+            "recovered_energy":
+                True,
+        },
+    }
+
+    result = (
+        process_outcome_for_character(
+            character=character,
+            world=world,
+            outcome_event=event,
+            autosave_after=False,
+        )
+    )
+
+    # The previous waking-period memory
+    # should have been consolidated.
+
+    assert (
+        character[
+            "memory"
+        ][0][
+            "clarity"
+        ]
+        > 80
+    )
+
+    # The newly created sleep memory should
+    # retain its normal initial clarity.
+    #
+    # It did not exist when sleep
+    # consolidation occurred.
+
+    sleep_memory = result[
+        "memory"
+    ]
+
+    assert (
+        sleep_memory[
+            "description"
+        ]
+        == event[
+            "description"
+        ]
+    )
+
+    assert (
+        sleep_memory[
+            "clarity"
+        ]
+        == 95
+    )
+
+    assert (
+        len(
+            character[
+                "memory"
+            ]
+        )
+        == 2
+    )
