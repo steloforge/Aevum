@@ -974,6 +974,36 @@ def create_self_directed_outcome_event(
 
         location = "Family Shop"
     
+    # ========================================================
+    # TRAINING
+    # ========================================================
+
+    elif action_type == "train":
+
+        description = (
+            f"{character['name']} spent "
+            f"{duration_hours} hours secretly "
+            "practicing knight martial techniques."
+        )
+
+        details.update({
+            "trained_skill":
+                True,
+
+            "secret_training":
+                True,
+
+            "pursued_goal":
+                "Become a knight",
+        })
+
+        participants = [
+            character["name"],
+        ]
+
+        location = (
+            "Private Training Area"
+        )
     
     
     # ========================================================
